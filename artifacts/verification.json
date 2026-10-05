@@ -1,0 +1,40 @@
+{
+  "tested_commit": "aeb853fc890f7f1dee7a79036ac4a4f0fbfe315a",
+  "environment": "fresh clone and virtual environment, same host, existing external inputs and Hub cache",
+  "reference_checks_passed": 12,
+  "selected_equations_identical": 447,
+  "selected_test_r2_max_error": 0,
+  "figure_png_and_pdf_pairs": 7,
+  "zero_latent_max_error": 0.0,
+  "raw_latent_summary_identical": true,
+  "cmd_rows": 440140,
+  "cmd_score_max_error": 8.881784197001252e-16,
+  "cmd_colour_and_magnitude_identical": true,
+  "score_and_anatomy_original_code_comparison": [
+    {
+      "seed": 42,
+      "score_max_abs_error": 3.552713678800501e-15,
+      "baseline_max_abs_error": 1.7763568394002505e-15,
+      "spread_max_abs_error": 9.71445146547012e-17
+    },
+    {
+      "seed": 43,
+      "score_max_abs_error": 2.220446049250313e-15,
+      "baseline_max_abs_error": 1.7763568394002505e-15,
+      "spread_max_abs_error": 9.71445146547012e-17
+    },
+    {
+      "seed": 44,
+      "score_max_abs_error": 2.6645352591003757e-15,
+      "baseline_max_abs_error": 1.7763568394002505e-15,
+      "spread_max_abs_error": 9.367506770274758e-17
+    }
+  ],
+  "checkpoint_test_rows": 32,
+  "checkpoint_comparison_passed": true,
+  "limits": [
+    "No full-dataset inference run",
+    "No second-machine verification",
+    "External paper assets not yet hosted"
+  ]
+}

@@ -27,6 +27,12 @@ Styling differs from the historical manuscript figures; its numerical recipes
 and the known latent-distribution recreation are retained. No new figure was
 automatically copied into the paper.
 
-The clean-clone run is recorded here after completion. It uses a new virtual
-environment on this host and external audited data; it is not a second-machine
-or public-download verification. Full inference across all spectra remains open.
+The clean-clone run passed at code commit
+`aeb853fc890f7f1dee7a79036ac4a4f0fbfe315a`: installation from the lockfile,
+12 analysis reference checks, the cache rebuild, all seven PNG/PDF figure pairs,
+and the 32-spectrum checkpoint comparison. The machine-readable result is
+[artifacts/verification.json](../artifacts/verification.json).
+
+This used a new virtual environment on the same host, existing external data,
+and the cached Spender constructor artifact. It is not a second-machine or
+public-download verification. Full inference across all spectra remains open.

@@ -13,8 +13,9 @@ unconditional embeddings, redshift and mask ratio.
 The inspected upstream revision and provenance limits are in
 [docs/PROVENANCE.md](docs/PROVENANCE.md).
 
-All seven active figures are implemented and numerically compared with the
-audit. They use portable styling, so they are not pixel-identical replacements
+All seven active figures are implemented, numerically compared with the audit,
+and verified from a clean clone with a fresh locked environment. They use
+portable styling, so they are not pixel-identical replacements
 for manuscript images. See [figure definitions](docs/FIGURES.md),
 [validation](docs/VALIDATION.md), and [input acquisition](docs/INPUTS.md).
 Public hosting for the exact checkpoint, embeddings and archived spectrum
