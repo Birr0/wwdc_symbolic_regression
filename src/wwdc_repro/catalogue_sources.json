@@ -1,0 +1,34 @@
+{
+  "crossmatch": {
+    "repo_id": "Birr001/VACG_raw_cross_match",
+    "revision": "a7fd663496aad2dc249c0f025dbdecce57e8e1cf",
+    "files": [
+      {
+        "file": "data/test-00000-of-00001.parquet",
+        "sha256": "954b2f44ec6472a0fbf5052db63a71cc31b9ecdbf9cee74eb609cba8cbdd5220"
+      },
+      {
+        "file": "data/train-00000-of-00001.parquet",
+        "sha256": "6cf4b706242d23d80d0b0fc5eee28fcc08f2b5ab9adfa743def2f77362282c62"
+      },
+      {
+        "file": "data/val-00000-of-00001.parquet",
+        "sha256": "7671049c37c155cc1e2041ce65fda639ea267c68f75e5f885c7d39ad5364a0ff"
+      }
+    ]
+  },
+  "photometry": {
+    "repo_id": "Birr001/kcorrect_VAC",
+    "revision": "365d3e63fe4edbc3464bac51823258a2cc8564bf",
+    "files": [
+      {
+        "file": "data/full-00000-of-00002.parquet",
+        "sha256": "d95082c9310bafa2cd213a1dca80f478f6304115628319f33a762654731d440d"
+      },
+      {
+        "file": "data/full-00001-of-00002.parquet",
+        "sha256": "6457f57ab9864f2939375c4e9996ad200bbc0cd2c8ca57779e79dd221f863bd4"
+      }
+    ]
+  }
+}

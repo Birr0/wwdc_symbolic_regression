@@ -1,0 +1,36 @@
+# Figure calculations
+
+All outputs are written to the explicit `--outdir`. The figure command hashes
+its inputs and source files in `manifest.json`. Numerical equivalence is the
+migration criterion; fonts, colours and page layout differ from the old scripts.
+
+| Figure stem | Inputs and calculation | Numerical output |
+| --- | --- | --- |
+| `frontier` | Validation-selected test scores; seed mean and min–max at each budget | Analysis `curves.csv`, `selected.csv` |
+| `frontier_by_seed` | Same selected rows, separated into three seed panels | Analysis `selected.csv` |
+| `score_distribution_marginal` | Cleaned test rows, L24 conditional+z equations; unit SVD direction of zero-latent slopes on 120 redshifts between test 0.5/99.5 percentiles; central step 0.05 | JSON weights and moments |
+| `latent_dim_distributions` | All 52,811 raw test embeddings before catalogue/target cuts or scaling; ten dimensions, 60 bins over [−5,5] | JSON per-dimension moments |
+| `equation_anatomy_by_seed` | Same L24 score; observed test masses coloured by score; zero-latent baseline and prediction SD from 4,000 fixed sampled latent rows at 300 redshifts, RNG seed 0 | CSV baseline and prediction SD |
+| `zero_latent` | All usable historical conditional+z/original+z front reductions across three seeds; six-significant-digit symbolic reductions; 30 observed-mass bins and 200 redshift grid points | CSV median reductions/deviations; excluded reductions JSON |
+| `cmd_latent_all_gr_seed42` | All cleaned splits; seed42 L24 score; pinned cache; colour `ABSMAG_g−ABSMAG_r`, magnitude `ABSMAG_r−0.7745`; mean score in 60×56 cells, masked below 25 spectra | Compressed row CSV, grid NPZ, summary JSON |
+
+The zero-latent panel reproduces the historical population of saved-front
+reductions. It is not a validation-selected subset; the finite parent test-score
+filter is a historical plotting rule, not selection of the best test score.
+A zero-latent prediction is a slice through an equation, not an exact conditional
+mean. Anatomy bands describe model predictions, not observed-mass uncertainty
+or guaranteed 68/95% coverage.
+
+The CMD uses finite magnitudes between −99 and 0 and the frozen historical
+first match per spectrum. Its density is a Gaussian KDE from 60,000 rows
+sampled with `random_state=0`, on a 180×180 grid. Contours target 10/30/50/70/90%
+of KDE mass; the finite grid contains about 98.95%. The two Masters lines use
+the audited ridge `0.73−0.02(Mr+20)` and blue edge `0.63−0.02(Mr+20)`.
+The displayed colour range is 0.15–1.0; the calculations use 0.15–1.20.
+
+CMD score weights use a central difference at z=0.05 with step 1e-4 and are
+normalised in the positive local mass-gradient direction. The other score
+plots use the historical SVD definition above. These definitions agree closely
+for the paper equations, but are documented separately rather than silently
+changing the audited calculations. A future unified convention requires a
+recorded numerical comparison.

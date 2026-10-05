@@ -8,10 +8,11 @@ commit [`0895b4ed9dbe6815cbe641fd1f936c6d53197aa5`](https://github.com/Birr0/wwd
 Its README describes the Hydra-driven training command in
 `src/wwdc_spectra/training/train.py` and the embedding-generation command in
 `src/wwdc_spectra/inference/embed.py`. The resulting parquet files contain
-`orig`, `cond`, and `uncond` representations. The checkpoint and its exact
-configuration still need a public artifact reference and hash here. Merely
-linking the upstream code does not establish the historical checkpoint's
-training run or a successful fresh embedding run.
+`orig`, `cond`, and `uncond` representations. The checkpoint and configuration
+hashes are now recorded in [INPUTS.md](INPUTS.md). The standalone inference
+command passed a 32-spectrum comparison using a clean checkout of this revision
+and a locked environment. Public artifact locations still need to be assigned.
+This numerical comparison does not establish the checkpoint's full training history.
 
 ## Downstream numerical analysis
 
@@ -30,8 +31,11 @@ be documented, but exact replay from a seed is not claimed.
 
 ## Work remaining for the public artifact
 
-- Record public locations, licences, revision IDs and checksums for all inputs.
-- Add the checkpoint-to-embeddings command and broaden its numerical comparison.
-- Integrate the six other active figures into clean parameterised commands.
-- Define the CMD mirror version and deterministic match/quality rule.
-- Check a fresh clone on a separate machine and record the resulting manifest.
+- Publish the exact checkpoint/config, archived splits and cached embeddings with licences.
+- Run the complete checkpoint-to-embeddings dataset and measure runtime/error limits.
+- Check the workflow on a second machine; a same-host fresh-clone check is documented separately.
+- Resolve the original CMD photometry/crossmatch provenance if claiming reproduction before the pinned mirror input.
+
+All seven active figures and the deterministic pinned-mirror CMD cache builder
+are now included. [FIGURES.md](FIGURES.md) states the historical match and
+quality rules, sample choices and numerical limits.

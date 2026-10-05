@@ -1,0 +1,92 @@
+[
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_z_seed42/pareto_fronts.csv",
+    "sha256": "154b7e4e82fb71babc69676b044afa14a5c879242d7512ad5d99e632baec50c5",
+    "bytes": 8798
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_z_seed43/pareto_fronts.csv",
+    "sha256": "a5580ecfa8439fe811497228ee47d2ccd14493d85f7ceaa9b094ced40aa3e5ac",
+    "bytes": 7437
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_z_seed44/pareto_fronts.csv",
+    "sha256": "e08babdbebf1b8bb698d1db315806cbb71c766709319b9ea749383eaee1bde78",
+    "bytes": 5837
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig_seed42/pareto_fronts.csv",
+    "sha256": "80dfbd9ea99b9c5f44ec07d11f7d8c8440042e832d792485d38e5663542560b1",
+    "bytes": 11245
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig_seed43/pareto_fronts.csv",
+    "sha256": "2e206c9ded1e8c2829ab5e36e3e5c65b6c618fd7b1484d541bd17aa8ebdc8dd4",
+    "bytes": 10700
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig_seed44/pareto_fronts.csv",
+    "sha256": "07b912f385edd7bcfd2e0c21010c6175d6ff1e4ebda0faac560c7ca64141f809",
+    "bytes": 9253
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_uncond_seed42/pareto_fronts.csv",
+    "sha256": "efe85e88bb6845e35294626809027be1a8348f897c23dfe16960477ecaa5a835",
+    "bytes": 9831
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_uncond_seed43/pareto_fronts.csv",
+    "sha256": "9e6188f8191ddf948cb4006a42bef26a1dac995303a838d497af4c54046e7d32",
+    "bytes": 9783
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_uncond_seed44/pareto_fronts.csv",
+    "sha256": "58206ff39d70170e151e244c13546e30de995132dc6054a41ed4c3562624ae35",
+    "bytes": 8391
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond_seed42/pareto_fronts.csv",
+    "sha256": "07b3b581b8ce8a2b743d7295a653663d7656519915ae435402b5648e2d102fc5",
+    "bytes": 10812
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond_seed43/pareto_fronts.csv",
+    "sha256": "6b00af5c0ff538c6890d145f2690912cb325a91b7ab9e859b62e104feacc12c1",
+    "bytes": 10800
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond_seed44/pareto_fronts.csv",
+    "sha256": "07039b2d3be75086fffaf29e706dc4a3d9c407bae3880ddf7274945e8aa7d942",
+    "bytes": 11418
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond+z_seed42/pareto_fronts.csv",
+    "sha256": "6ce09d61a63d4a831f989e326d6d851494229f19aa3da5529fc692bb14b895bf",
+    "bytes": 11167
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond+z_seed43/pareto_fronts.csv",
+    "sha256": "d82ae2b85bc15d186d85c98bf36c7ce3864ff4eb17eea694d4450953e9b51500",
+    "bytes": 11098
+  },
+  {
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_cond+z_seed44/pareto_fronts.csv",
+    "sha256": "bd6363dec192fc3322c591c98a954752d36ae290a79a465c798fada7cc578d97",
+    "bytes": 11816
+  },
+  {
+    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed42/pareto_fronts.csv",
+    "sha256": "07ecbc17f73f2c768ac198a080217778ae90ed3d527ccd15a4b9ef51bbc0150b",
+    "bytes": 10887
+  },
+  {
+    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed43/pareto_fronts.csv",
+    "sha256": "ecc4aa2f00981460a9e0fb2a19f3acf6331b14ff4a27ec9af05d881d98b9d5b1",
+    "bytes": 11924
+  },
+  {
+    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed44/pareto_fronts.csv",
+    "sha256": "458038f228721ce56e7f3dbe2ad3d6fb01fa9d01647022546f682d864f0f8a90",
+    "bytes": 11135
+  }
+]

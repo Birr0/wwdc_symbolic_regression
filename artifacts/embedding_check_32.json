@@ -1,0 +1,53 @@
+{
+  "upstream_revision": "0895b4ed9dbe6815cbe641fd1f936c6d53197aa5",
+  "checkpoint_sha256": "92d9aaf21e8523c1c45ee7b61c39ec53ea6235c308907e5a84475f1b7ff19604",
+  "config_sha256": "e1e7c16ac99eb87fe9914554233fe9f7ebab04e9e93247af6bd916da8353bb3a",
+  "device": "cpu",
+  "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+  "batch_size": 32,
+  "partial": true,
+  "solver": {
+    "method": "midpoint",
+    "n_steps": 20,
+    "step_size": 0.05,
+    "conditional_cfg_scale": 1.0,
+    "unconditional_cfg_scale": 0.0
+  },
+  "packages": {
+    "torch": "2.11.0",
+    "torchvision": "0.26.0",
+    "lightning": "2.6.1",
+    "spender": "0.2.9",
+    "flow-matching": "1.0.10",
+    "datasets": "4.8.5",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "python-dotenv": "1.2.2",
+    "timm": "1.0.26",
+    "huggingface-hub": "1.13.0"
+  },
+  "splits": {
+    "test": {
+      "rows": 32,
+      "prepared_spectra_sha256": "8bafc128c287e7ae1ee8611e0d6f35880b182740a55ee275aa757cf95bb78e70",
+      "ordered_source_id_sha256": "627d74ec3eaddb8660ffd561188d2324b8f16e5fd97ca6ce80623f6760dc8b2b",
+      "max_abs_error": {
+        "orig": 9.872019290924072e-07,
+        "cond": 1.8835067749023438e-05,
+        "uncond": 1.4185905456542969e-05,
+        "z": 0.0,
+        "mask_ratio": 0.0
+      },
+      "tolerance": {
+        "orig": 2e-06,
+        "cond": 2e-05,
+        "uncond": 2e-05,
+        "z": 0,
+        "mask_ratio": 0
+      },
+      "passed": true
+    }
+  },
+  "passed": true
+}
