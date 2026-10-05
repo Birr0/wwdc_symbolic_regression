@@ -183,8 +183,9 @@ def seed_frontiers(selected: pd.DataFrame, outdir: Path) -> None:
             )
         ax.set(title=f"seed {seed}", xlabel="equation length budget", ylim=(0, 0.92))
     axes[0].set_ylabel("test $R^2$ (validation selected)")
-    axes[-1].legend(loc="lower right", fontsize=7)
-    fig.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=6, fontsize=8)
+    fig.tight_layout(rect=(0, 0, 1, .91))
     save(fig, outdir / "frontier_by_seed")
 
 
