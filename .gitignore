@@ -9,3 +9,7 @@ data/
 *.fit
 *.fit.gz
 *.parquet
+dist/
+build/
+*.egg-info/
+.env

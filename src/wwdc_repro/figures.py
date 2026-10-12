@@ -19,10 +19,13 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from .cli import COLOURS, draw_frontier, sha256
+from .cli import sha256
 from .data import clean_target, load_sample, matrices, sample_summary
 from .equations import evaluate
-from .frontier import ARMS, SEEDS, curves, front_path
+from .figstyle import (
+    ARM_COLOUR, ARM_LABEL, ARM_ORDER, STYLE, SURFACE, frontier_legend, tidy,
+)
+from .frontier import SEEDS, curves, front_path
 
 SCORE_COLOURS = {42: "#b2182b", 43: "#2166ac", 44: "#1b7837"}
 
@@ -103,7 +106,7 @@ def score_figure(
         linewidth=1.5,
         label=r"$\mathcal{N}(0,1)$",
     )
-    ax.set(xlabel=r"$s = \sum_k w_k X_k$", ylabel="density", xlim=(-4.2, 4.2))
+    ax.set(xlabel=r"$s$", ylabel="density", xlim=(-4.2, 4.2))
     ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
     save(fig, outdir / "score_distribution_marginal")
@@ -112,14 +115,9 @@ def score_figure(
     )
 
 
-def latent_figure(embeddings: Path, outdir: Path) -> None:
-    files = sorted((embeddings / "test").glob("*.parquet"))
-    if not files:
-        raise FileNotFoundError(f"No test embedding parquet files under {embeddings}")
-    frame = pd.concat(
-        (pd.read_parquet(path, columns=["orig", "cond"]) for path in files),
-        ignore_index=True,
-    )
+def latent_figure(frame: pd.DataFrame, outdir: Path) -> None:
+    """Use the exact cleaned paper test sample, verified by main against reference IDs."""
+    frame[["specObjID"]].to_csv(outdir / "latent_sample_ids.csv", index=False)
     orig, cond = np.stack(frame.orig.to_numpy()), np.stack(frame.cond.to_numpy())
     if orig.shape != cond.shape or orig.ndim != 2 or orig.shape[1] != 10:
         raise ValueError(
@@ -127,6 +125,9 @@ def latent_figure(embeddings: Path, outdir: Path) -> None:
         )
     if not (np.isfinite(orig).all() and np.isfinite(cond).all()):
         raise ValueError("Non-finite latent values")
+    from .latent_corner import latent_corner
+
+    latent_corner(orig, cond, outdir)
     grid, edges = np.linspace(-5, 5, 600), np.linspace(-5, 5, 61)
     normal = stats.norm.pdf(grid)
     fig, axes = plt.subplots(5, 2, figsize=(10, 13), constrained_layout=True)
@@ -167,26 +168,102 @@ def latent_figure(embeddings: Path, outdir: Path) -> None:
     )
 
 
+def _frontier_axes(ax, lo: float, hi: float, top: float) -> None:
+    ax.set_xlim(lo - 0.8, hi + 0.8)
+    ax.set_ylim(0.0, top + 0.05)
+    ax.set_xlabel("maximum equation length", fontsize=13)
+    tidy(ax, grid_axis=None, labelsize=11)
+
+
+@plt.style.context(STYLE)
+def paper_frontier(selected: pd.DataFrame, outdir: Path) -> None:
+    """Paper Figure 1: validation-selected test R^2, seed mean with min-max band.
+
+    Rendering follows the historical plot_frontier.py; the selection does not: each
+    point is the validation-selected equation at that length budget, scored on test.
+    """
+    display = frontier_display(selected)
+    summary = display.groupby(["arm", "budget"]).agg(
+        mean=("display_r2", "mean"), low=("display_r2", "min"),
+        high=("display_r2", "max"), n=("display_r2", "size"),
+        n_finite=("display_r2", "count"), fallback_count=("display_fallback", "sum")
+    ).reset_index()
+    summary.loc[summary.n_finite < summary.n, ["mean", "low", "high"]] = np.nan
+    fig, ax = plt.subplots(figsize=(7.2, 5.0), dpi=300, facecolor=SURFACE)
+    for arm in ARM_ORDER:  # bands first, so no ribbon covers a neighbouring line
+        c = summary[summary.arm == arm].sort_values("budget")
+        ax.fill_between(c.budget, c.low, c.high, color=ARM_COLOUR[arm], alpha=0.22,
+                        linewidth=0, zorder=2)
+    for arm in ARM_ORDER:
+        c = summary[summary.arm == arm].sort_values("budget")
+        ax.plot(c.budget, c["mean"], linewidth=1.5,
+                color=ARM_COLOUR[arm], label=ARM_LABEL[arm], zorder=3)
+        _frontier_markers(ax, c.budget, c["mean"], c.fallback_count > 0, ARM_COLOUR[arm])
+    _frontier_axes(ax, summary.budget.min(), summary.budget.max(), summary.high.max())
+    ax.set_ylabel("$R^2$", fontsize=13)
+    frontier_legend(ax)
+    fig.tight_layout()
+    stem = outdir / "frontier_lgm_tot_p50"
+    fig.savefig(stem.with_suffix(".png"), dpi=300, facecolor=SURFACE, bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".pdf"), facecolor=SURFACE, bbox_inches="tight")
+    plt.close(fig)
+    summary.to_csv(outdir / "frontier_lgm_tot_p50.csv", index=False)
+    display.to_csv(outdir / "frontier_display_values.csv", index=False)
+    curves(selected).to_csv(outdir / "frontier_selected_scores.csv", index=False)
+
+
+def frontier_display(selected: pd.DataFrame) -> pd.DataFrame:
+    """Display-only fallback: best finite test score at a strictly lower budget.
+
+    This is test-informed plotting, not validation selection. Never mutate test_r2
+    or promote a fallback into the pool of actually evaluated selections.
+    """
+    display = selected.copy()
+    display["display_r2"] = display.test_r2
+    display["display_fallback"] = False
+    display["fallback_budget"] = np.nan
+    display["fallback_length"] = np.nan
+    for _, group in display.groupby(["arm", "seed"]):
+        for index, row in group[~np.isfinite(group.test_r2)].iterrows():
+            pool = group[(group.budget < row.budget) & np.isfinite(group.test_r2)]
+            if pool.empty:
+                continue
+            best = pool.sort_values(["test_r2", "budget"], ascending=[False, True]).iloc[0]
+            display.loc[index, ["display_r2", "display_fallback", "fallback_budget", "fallback_length"]] = [
+                best.test_r2, True, best.budget, best.chosen_length]
+    return display
+
+
+def _frontier_markers(ax, budget, value, fallback, colour):
+    ax.plot(budget[~fallback], value[~fallback], linestyle="none", marker="o",
+            markersize=2.6, color=colour, zorder=4)
+    ax.plot(budget[fallback], value[fallback], linestyle="none", marker="^",
+            markersize=6, markerfacecolor=SURFACE, markeredgecolor=colour,
+            markeredgewidth=1.1, zorder=5)
+
+
+@plt.style.context(STYLE)
 def seed_frontiers(selected: pd.DataFrame, outdir: Path) -> None:
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4), sharey=True, dpi=250)
+    """Paper Figure 5: the same validation-selected test R^2, one panel per seed."""
+    display = frontier_display(selected)
+    fig, axes = plt.subplots(1, 3, figsize=(13.8, 4.4), dpi=300, sharey=True,
+                             facecolor=SURFACE)
     for ax, seed in zip(axes, SEEDS, strict=True):
-        for arm in ARMS:
-            group = selected[
-                (selected.seed == seed) & (selected.arm == arm)
-            ].sort_values("budget")
-            ax.plot(
-                group.budget,
-                group.test_r2,
-                color=COLOURS[arm],
-                label=arm,
-                linewidth=1.5,
-            )
-        ax.set(title=f"seed {seed}", xlabel="equation length budget", ylim=(0, 0.92))
-    axes[0].set_ylabel("test $R^2$ (validation selected)")
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=6, fontsize=8)
-    fig.tight_layout(rect=(0, 0, 1, .91))
-    save(fig, outdir / "frontier_by_seed")
+        for arm in ARM_ORDER:
+            c = display[(display.seed == seed) & (display.arm == arm)].sort_values("budget")
+            ax.plot(c.budget, c.display_r2, linewidth=1.5,
+                    color=ARM_COLOUR[arm], label=ARM_LABEL[arm], zorder=3)
+            _frontier_markers(ax, c.budget, c.display_r2, c.display_fallback, ARM_COLOUR[arm])
+        _frontier_axes(ax, selected.budget.min(), selected.budget.max(),
+                       selected.test_r2.max())
+        ax.set_title(f"seed {seed}", fontsize=12)
+    axes[0].set_ylabel("$R^2$", fontsize=13)
+    frontier_legend(axes[-1])
+    fig.tight_layout()
+    stem = outdir / "frontier_lgm_tot_p50_by_seed"
+    fig.savefig(stem.with_suffix(".png"), dpi=300, facecolor=SURFACE, bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".pdf"), facecolor=SURFACE, bbox_inches="tight")
+    plt.close(fig)
 
 
 def main() -> None:
@@ -212,6 +289,7 @@ def main() -> None:
         "anatomy",
         "zero-latent",
         "cmd",
+        "weights",
     ]
     parser.add_argument("--only", nargs="+", default=names, choices=names)
     args = parser.parse_args()
@@ -222,7 +300,7 @@ def main() -> None:
     if "cmd" in args.only and args.cmd_cache is None:
         parser.error("--cmd-cache is required for cmd")
     inputs = [args.selected]
-    needs_sample = bool(set(args.only) & {"score", "anatomy", "zero-latent", "cmd"})
+    needs_sample = bool(set(args.only) & {"score", "anatomy", "zero-latent", "cmd", "latent", "weights"})
     if needs_sample:
         inputs.extend(
             [
@@ -285,11 +363,9 @@ def main() -> None:
     if selected.duplicated(["arm", "seed", "budget"]).any():
         raise ValueError("Duplicate selection keys")
     if "frontier" in args.only:
-        draw_frontier(curves(selected), args.outdir)
+        paper_frontier(selected, args.outdir)
     if "seed-frontiers" in args.only:
         seed_frontiers(selected, args.outdir)
-    if "latent" in args.only:
-        latent_figure(args.embeddings, args.outdir)
     if needs_sample:
         frames = clean_target(
             load_sample(args.embeddings, args.galspec, args.specgals_home)
@@ -303,6 +379,8 @@ def main() -> None:
             expected = reference["samples"][row["split"]]
             if any(row[key] != expected[key] for key in ("rows", "id_sha256")):
                 raise ValueError(f"Sample differs from paper reference: {row['split']}")
+    if "latent" in args.only:
+        latent_figure(frames["test"], args.outdir)
     if "score" in args.only:
         score_figure(frames, selected, args.outdir)
     from .paper_panels import anatomy, zero_latent, cmd
@@ -313,6 +391,13 @@ def main() -> None:
         zero_latent(frames, args.fronts, args.outdir, save)
     if "cmd" in args.only:
         cmd(frames, selected, args.cmd_cache, args.outdir, selected_l24, save)
+    if "weights" in args.only:
+        from .weights import weights_table
+
+        x = matrices(frames, "cond+z")["X_test"]
+        weights_table(
+            selected, x[:, -1], x.shape[1], args.outdir, score_direction, selected_l24
+        )
     print(f"Wrote {', '.join(args.only)} figures to {args.outdir}")
 
 

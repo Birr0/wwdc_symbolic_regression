@@ -1,0 +1,28 @@
+name: Reproduction checks
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - name: Install locked analysis environment
+        run: uv sync --frozen
+      - name: Run data, equation, and selection tests
+        run: uv run --frozen python -m unittest discover -s tests -v
+      - name: Check analysis commands
+        run: |
+          uv run --frozen wwdc-reproduce --help
+          uv run --frozen wwdc-figures --help
+          uv run --frozen wwdc-mlp-probe --help
+      - name: Check separate locked search environment
+        run: uv run --script --locked experiments/rerun_sr.py --help
+      - name: Build distribution
+        run: uv build

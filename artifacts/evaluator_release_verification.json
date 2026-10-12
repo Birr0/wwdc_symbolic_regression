@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-12",
+  "reference_checks_passed": 15,
+  "unit_tests_passed": 14,
+  "candidate_scores_frozen_selections_test_scores_curves_exact": true,
+  "new_columns": [
+    "train_failure_reason",
+    "validation_failure_reason",
+    "test_failure_reason"
+  ],
+  "source_hashes": {
+    "src/wwdc_repro/equations.py": "fb1040edb3a3a1543d055c8e3a95f24d3302e585617e575a82d5aa2c9955b5c9",
+    "src/wwdc_repro/frontier.py": "442ba596243fdf863a4a526641559525e54ae188ce521944c72accbc8293085e"
+  }
+}

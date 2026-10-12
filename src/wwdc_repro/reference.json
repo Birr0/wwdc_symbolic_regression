@@ -1,13 +1,29 @@
 {
-  "source": "Pre-submission audit calculations recorded 2026-10-02; maintained separately from this runner",
+  "source": "Original sample/L24 audit; eligibility independently recalculated from cached train/validation scores and verified native training recoveries on 2026-10-08",
   "samples": {
-    "train": {"rows": 352896, "id_sha256": "54dc39828eded27546e87d466c7d2a67a5313bbb77253c9d530c7b1486eee0eb"},
-    "val": {"rows": 44246, "id_sha256": "a17d8cc366725733a7324f515bb733c18db424c8aa577290d83050720f817cb4"},
-    "test": {"rows": 44141, "id_sha256": "63ae0b47747cbab1225be5495519b70bcb7b5b89cd53ac07f0605ce7889df5b8"}
+    "train": {
+      "rows": 352896,
+      "ordered_id_sha256": "2b998b77886d75bc9036f24c57404af88c1056e534884f35fd952a14b7caeb50",
+      "id_sha256": "54dc39828eded27546e87d466c7d2a67a5313bbb77253c9d530c7b1486eee0eb"
+    },
+    "val": {
+      "rows": 44246,
+      "ordered_id_sha256": "a165fd3abd1cdcfefeff9215b98c855ebcaef78aed4721cbf9068a3b3e97311c",
+      "id_sha256": "a17d8cc366725733a7324f515bb733c18db424c8aa577290d83050720f817cb4"
+    },
+    "test": {
+      "rows": 44141,
+      "ordered_id_sha256": "2a252ac53ce0315120ed679fabee18c52ef81a6589a999fbf88a5d373b149f5f",
+      "id_sha256": "63ae0b47747cbab1225be5495519b70bcb7b5b89cd53ac07f0605ce7889df5b8"
+    }
   },
-  "l24_test_r2": {"42": 0.8593248413843659, "43": 0.8633644692157173, "44": 0.861979360080393},
-  "metric_tolerance": 0.000001,
+  "l24_test_r2": {
+    "42": 0.8593248413843659,
+    "43": 0.8633644692157173,
+    "44": 0.861979360080393
+  },
+  "metric_tolerance": 1e-06,
   "candidate_count": 387,
-  "selectable_count": 360,
+  "selectable_count": 365,
   "selected_budget_count": 447
 }

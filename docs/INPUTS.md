@@ -47,7 +47,10 @@ The URLs point at a moving branch, so the hashes define the expected versions.
 Obtain `galSpecExtra-dr8.fits` through the official
 [SDSS DR8 galSpec data page](https://www.sdss3.org/dr8/spectro/galspec.php)
 and place it at the data-root top level. Use the DR8 file with the recorded
-hash, not a newer catalogue with a similar name. The target is `lgm_tot_p50`.
+hash, not a newer catalogue with a similar name. The target is astroML's
+lowercase `lgm_tot_p50`; the separate FITS join retains uppercase `LGM_TOT_P50`.
+The two columns agree exactly on all retained archived rows. See
+[the data review](DATA_REVIEW.md) for the verified column provenance.
 
 ## CMD cache
 

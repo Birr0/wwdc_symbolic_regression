@@ -24,10 +24,14 @@ astroML SDSS specgals, then galSpecExtra; it applies `mask_ratio <= 0.5`,
 `z <= 0.3`, and valid `lgm_tot_p50`. The astroML source itself has `z > 0.02`.
 
 The candidates are saved `pareto_fronts.csv` files. This package evaluates
-their printed expressions, rejects training-score failures, selects on the
-held-out validation split, and reports saved test scores. The saved fronts
-are inputs, not regenerated search outputs. Search settings and runtime should
-be documented, but exact replay from a seed is not claimed.
+their printed expressions, checks agreement with independent training scores,
+selects on the held-out validation split, and freshly evaluates the frozen
+selections on test. Failed test evaluations are retained without replacement.
+See [the selection audit](SELECTION_AUDIT.md) for recovered training references
+and export-precision limitations. The main analysis uses archived fronts as
+inputs. Separate [search experiments](../experiments/README.md) reproduced
+specific arm/seed fronts exactly on the audited runtime; this is not a claim
+of exact replay for all seeds or across platforms.
 
 ## Work remaining for the public artifact
 

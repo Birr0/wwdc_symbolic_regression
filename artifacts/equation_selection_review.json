@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-12",
+  "source_hashes": {
+    "src/wwdc_repro/equations.py": "5c0509edfc7de2140ebe665e93843a3e322c15508d3d3b890f57ad697bba4200",
+    "src/wwdc_repro/frontier.py": "abfce6760e5540004461eed36c172f0676c4b7ca4d5eeda3267ec41e81f2e9ca"
+  },
+  "run_directory": "outputs/data-validation-2026-10-12",
+  "checks": {
+    "frozen_selections_unchanged_after_test": true,
+    "independent_validation_ranking_all_budgets": true,
+    "eligibility_formula_matches_all_candidates": true,
+    "all_archived_variables_are_in_range": true,
+    "failed_seed_aggregates_remain_gaps": true
+  },
+  "candidate_count": 387,
+  "eligible_count": 365,
+  "selection_count": 447,
+  "failed_budget_points": 7,
+  "distinct_failed_equations": 4,
+  "archived_functions": [
+    "Abs",
+    "exp",
+    "log"
+  ],
+  "diagnostic_cases": {
+    "2": {
+      "predictions": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "score": -1.5
+    },
+    "X1": {
+      "predictions": [
+        -1.0,
+        0.0,
+        1.0
+      ],
+      "score": -0.5
+    },
+    "log(X1)": {
+      "predictions": [
+        "nan",
+        "-inf",
+        0.0
+      ],
+      "score": "nan"
+    },
+    "log(abs(X1))": {
+      "predictions": [
+        0.0,
+        "-inf",
+        0.0
+      ],
+      "score": "nan"
+    },
+    "exp(1000*X1)": {
+      "predictions": [
+        0.0,
+        1.0,
+        "inf"
+      ],
+      "score": "nan"
+    },
+    "X1/X1": {
+      "predictions": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "score": 0.0
+    },
+    "log(X1)-log(X1)": {
+      "predictions": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "score": -1.5
+    },
+    "unknown(X1)": {
+      "exception_type": "NameError",
+      "exception_message": "name 'unknown' is not defined"
+    },
+    "X2": {
+      "exception_type": "TypeError",
+      "exception_message": "Cannot convert expression to float"
+    }
+  }
+}

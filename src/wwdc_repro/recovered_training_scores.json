@@ -1,0 +1,505 @@
+{
+  "description": "Native training-only scores recovered from exact seeded reruns; no test metrics used for eligibility.",
+  "candidates": [
+    {
+      "arm": "orig",
+      "seed": 42,
+      "length": 25,
+      "equation": "((-0.002490) + (1.000236 * (((((0.079905 * X8) - 0.477040) - ((-0.040695) * X5)) * ((((-0.433617) * X10) + ((-0.241870) * X7)) - ((log((0.248890 * X3)+1) + exp((0.240909 * X5))) + (0.678685 * X9)))) - ((-10.132642) + ((-0.139372) * X1)))))",
+      "front_sha256": "80dfbd9ea99b9c5f44ec07d11f7d8c8440042e832d792485d38e5663542560b1",
+      "native_train_r2": 0.8059713817261144
+    },
+    {
+      "arm": "orig",
+      "seed": 42,
+      "length": 27,
+      "equation": "((-0.000425) + (1.000040 * (((((0.071874 * X8) - (0.534385 + ((-0.035825) * X10))) - ((-0.049174) * X5)) * ((((-0.433961) * X10) + ((-0.227642) * X7)) - ((log((0.235288 * X3)+1) + exp((0.227115 * X5))) + (0.591432 * X9)))) - ((-10.085157) + ((-0.121812) * X1)))))",
+      "front_sha256": "80dfbd9ea99b9c5f44ec07d11f7d8c8440042e832d792485d38e5663542560b1",
+      "native_train_r2": 0.8088828527473313
+    },
+    {
+      "arm": "orig",
+      "seed": 43,
+      "length": 23,
+      "equation": "(9.596591 + (0.999183 * (((((((-0.266814) * X10) - exp((0.107803 * X7))) - (0.164663 * X3)) + ((-0.266354) * X9)) * (((-0.125872) * X1) - exp(log((0.180076 * X8)+1)))) * (exp(((-0.251620) * X8)) + ((-0.056785) * X10)))))",
+      "front_sha256": "2e206c9ded1e8c2829ab5e36e3e5c65b6c618fd7b1484d541bd17aa8ebdc8dd4",
+      "native_train_r2": 0.8014632872806255
+    },
+    {
+      "arm": "orig",
+      "seed": 43,
+      "length": 25,
+      "equation": "(9.756679 + (0.836783 * (((((((-0.273182) * X10) - exp((0.142788 * X7))) - (0.299747 * X3)) + log(((-0.272345) * X9)+1)) * (((-0.126001) * X1) - (exp(((-0.086738) * X3)) - ((-0.183268) * X8)))) * (exp(((-0.280770) * X8)) + ((-0.042381) * X10)))))",
+      "front_sha256": "2e206c9ded1e8c2829ab5e36e3e5c65b6c618fd7b1484d541bd17aa8ebdc8dd4",
+      "native_train_r2": 0.8038481478807528
+    },
+    {
+      "arm": "orig",
+      "seed": 43,
+      "length": 26,
+      "equation": "(9.739058 + (1.000019 * (((((((-0.273182) * X10) - exp((0.132432 * X7))) - (0.299747 * X3)) + log(((-0.272345) * X9)+1)) * (((-0.126001) * X1) - ((0.855712 - (0.082719 * X3)) - ((-0.183268) * X8)))) * (exp(((-0.307678) * X8)) + ((-0.032721) * X10)))))",
+      "front_sha256": "2e206c9ded1e8c2829ab5e36e3e5c65b6c618fd7b1484d541bd17aa8ebdc8dd4",
+      "native_train_r2": 0.8052187856248174
+    },
+    {
+      "arm": "orig+z",
+      "seed": 42,
+      "length": 12,
+      "equation": "(0.461478 + (0.956671 * (log((((226309.968750 * X11) - (-18675.382812)) + (4647.008789 * X3))+1) - ((-0.259302) * X9))))",
+      "front_sha256": "07ecbc17f73f2c768ac198a080217778ae90ed3d527ccd15a4b9ef51bbc0150b",
+      "native_train_r2": 0.8669200353691511
+    },
+    {
+      "arm": "orig+z",
+      "seed": 43,
+      "length": 22,
+      "equation": "(0.006718 + (0.999368 * ((1.368735 * X8) + (((((4.968108 * X11) - (-9.096797)) - (0.071333 * X6)) + (exp((0.184868 * X9)) - (1.429616 * X8))) ^ ((4.233915 * X11) ^ (((-0.002259) * X10) + ((-0.006219) * X3)))))))",
+      "front_sha256": "ecc4aa2f00981460a9e0fb2a19f3acf6331b14ff4a27ec9af05d881d98b9d5b1",
+      "native_train_r2": 0.8957330218621886
+    },
+    {
+      "arm": "orig+z",
+      "seed": 44,
+      "length": 10,
+      "equation": "(9.862552 + ((-0.998887) * (((-0.237929) * X9) - log(((0.240053 * X3) + (11.551274 * X11))+1))))",
+      "front_sha256": "458038f228721ce56e7f3dbe2ad3d6fb01fa9d01647022546f682d864f0f8a90",
+      "native_train_r2": 0.8716092084930579
+    },
+    {
+      "arm": "orig+z",
+      "seed": 44,
+      "length": 12,
+      "equation": "(9.834601 + ((-0.935464) * ((((-0.265633) * X9) - log(((0.249380 * X3) + (13.412401 * X11))+1)) + (0.045981 * X8))))",
+      "front_sha256": "458038f228721ce56e7f3dbe2ad3d6fb01fa9d01647022546f682d864f0f8a90",
+      "native_train_r2": 0.8772472347568407
+    }
+  ],
+  "verified_runs": [
+    {
+      "arm": "orig",
+      "seed": 42,
+      "all_expressions_match": true,
+      "candidate_count": 24,
+      "manifest": {
+        "arm": "orig",
+        "seed": 42,
+        "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1021-nvidia-aarch64-with-glibc2.39",
+        "source": "/home/birr0/Desktop/flower/examples/spectra/symbolic_regression/utils.py",
+        "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+        "versions": {
+          "pyoperon": "0.4.0",
+          "numpy": "2.4.4",
+          "pandas": "3.0.2",
+          "scikit-learn": "1.8.0"
+        },
+        "parameters": {
+          "add_model_intercept_term": true,
+          "add_model_scale_term": true,
+          "allowed_symbols": "add,sub,mul,div,exp,log1p,logabs,constant,variable,pow",
+          "brood_size": 10,
+          "comparison_factor": 0,
+          "crossover_internal_probability": 0.9,
+          "crossover_probability": 1.0,
+          "epsilon": 1e-06,
+          "female_selector": "tournament",
+          "generations": 1000,
+          "initialization_max_depth": 5,
+          "initialization_max_length": 10,
+          "initialization_method": "btc",
+          "irregularity_bias": 0.0,
+          "lamarckian_probability": 1.0,
+          "local_search_probability": 1.0,
+          "male_selector": "tournament",
+          "max_depth": 10,
+          "max_evaluations": 10000000,
+          "max_length": 25,
+          "max_selection_pressure": 100,
+          "model_selection_criterion": "minimum_description_length",
+          "mutation": {
+            "onepoint": 1.0,
+            "discretepoint": 1.0,
+            "changevar": 1.0,
+            "changefunc": 1.0,
+            "insertsubtree": 1.0,
+            "replacesubtree": 1.0,
+            "removesubtree": 1.0
+          },
+          "mutation_probability": 0.25,
+          "n_threads": 8,
+          "objectives": [
+            "mse",
+            "length"
+          ],
+          "offspring_generator": "basic",
+          "optimizer": "lm",
+          "optimizer_batch_size": 0,
+          "optimizer_iterations": 1000,
+          "optimizer_likelihood": "gaussian",
+          "pool_size": 1000,
+          "population_size": 1000,
+          "random_state": 42,
+          "reinserter": "keep-best",
+          "sgd_beta": 0.9,
+          "sgd_beta2": 0.999,
+          "sgd_epsilon": 1e-06,
+          "sgd_learning_rate": 0.01,
+          "sgd_update_rule": "constant",
+          "symbolic_mode": false,
+          "time_limit": 9223372036854775807,
+          "tournament_size": 3,
+          "uncertainty": [
+            1
+          ]
+        },
+        "elapsed_seconds": 260.17978858947754
+      },
+      "rerun_front_sha256": "3c0c3e0eec163707528594a0cc908a9ce98801c4a6f23a80501270a34131f625",
+      "train_ids_sha256": "1c0c9037504758db7d3dd6c7c13349df3aacf3aa3c2fb1299050105b78cc68e5"
+    },
+    {
+      "arm": "orig",
+      "seed": 43,
+      "all_expressions_match": true,
+      "candidate_count": 23,
+      "manifest": {
+        "arm": "orig",
+        "seed": 43,
+        "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1021-nvidia-aarch64-with-glibc2.39",
+        "source": "/home/birr0/Desktop/flower/papers/wwdc_symbolic_regression/reproduction/experiments/historical/utils.py",
+        "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+        "historical_sha256": {
+          "utils.py": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+          "processing_fun.py": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562"
+        },
+        "versions": {
+          "pyoperon": "0.4.0",
+          "numpy": "2.4.4",
+          "pandas": "3.0.2",
+          "scikit-learn": "1.8.0"
+        },
+        "parameters": {
+          "add_model_intercept_term": true,
+          "add_model_scale_term": true,
+          "allowed_symbols": "add,sub,mul,div,exp,log1p,logabs,constant,variable,pow",
+          "brood_size": 10,
+          "comparison_factor": 0,
+          "crossover_internal_probability": 0.9,
+          "crossover_probability": 1.0,
+          "epsilon": 1e-06,
+          "female_selector": "tournament",
+          "generations": 1000,
+          "initialization_max_depth": 5,
+          "initialization_max_length": 10,
+          "initialization_method": "btc",
+          "irregularity_bias": 0.0,
+          "lamarckian_probability": 1.0,
+          "local_search_probability": 1.0,
+          "male_selector": "tournament",
+          "max_depth": 10,
+          "max_evaluations": 10000000,
+          "max_length": 25,
+          "max_selection_pressure": 100,
+          "model_selection_criterion": "minimum_description_length",
+          "mutation": {
+            "onepoint": 1.0,
+            "discretepoint": 1.0,
+            "changevar": 1.0,
+            "changefunc": 1.0,
+            "insertsubtree": 1.0,
+            "replacesubtree": 1.0,
+            "removesubtree": 1.0
+          },
+          "mutation_probability": 0.25,
+          "n_threads": 8,
+          "objectives": [
+            "mse",
+            "length"
+          ],
+          "offspring_generator": "basic",
+          "optimizer": "lm",
+          "optimizer_batch_size": 0,
+          "optimizer_iterations": 1000,
+          "optimizer_likelihood": "gaussian",
+          "pool_size": 1000,
+          "population_size": 1000,
+          "random_state": 43,
+          "reinserter": "keep-best",
+          "sgd_beta": 0.9,
+          "sgd_beta2": 0.999,
+          "sgd_epsilon": 1e-06,
+          "sgd_learning_rate": 0.01,
+          "sgd_update_rule": "constant",
+          "symbolic_mode": false,
+          "time_limit": 9223372036854775807,
+          "tournament_size": 3,
+          "uncertainty": [
+            1
+          ]
+        },
+        "elapsed_seconds": 266.09467911720276
+      },
+      "rerun_front_sha256": "9e671cccca1d7c0ec3f8bbb667f5c297fa6fd225bb829335fcf34d05cc4b28b9",
+      "train_ids_sha256": "863038b254eb14d3d63c850bf978f76168a715fe0d9d344c0b4f77ee1b75d2e6"
+    },
+    {
+      "arm": "orig+z",
+      "seed": 42,
+      "all_expressions_match": true,
+      "candidate_count": 22,
+      "manifest": {
+        "arm": "orig+z",
+        "seed": 42,
+        "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1021-nvidia-aarch64-with-glibc2.39",
+        "source": "/home/birr0/Desktop/flower/papers/wwdc_symbolic_regression/reproduction/experiments/historical/utils.py",
+        "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+        "historical_sha256": {
+          "utils.py": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+          "processing_fun.py": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562"
+        },
+        "versions": {
+          "pyoperon": "0.4.0",
+          "numpy": "2.4.4",
+          "pandas": "3.0.2",
+          "scikit-learn": "1.8.0"
+        },
+        "parameters": {
+          "add_model_intercept_term": true,
+          "add_model_scale_term": true,
+          "allowed_symbols": "add,sub,mul,div,exp,log1p,logabs,constant,variable,pow",
+          "brood_size": 10,
+          "comparison_factor": 0,
+          "crossover_internal_probability": 0.9,
+          "crossover_probability": 1.0,
+          "epsilon": 1e-06,
+          "female_selector": "tournament",
+          "generations": 1000,
+          "initialization_max_depth": 5,
+          "initialization_max_length": 10,
+          "initialization_method": "btc",
+          "irregularity_bias": 0.0,
+          "lamarckian_probability": 1.0,
+          "local_search_probability": 1.0,
+          "male_selector": "tournament",
+          "max_depth": 10,
+          "max_evaluations": 10000000,
+          "max_length": 25,
+          "max_selection_pressure": 100,
+          "model_selection_criterion": "minimum_description_length",
+          "mutation": {
+            "onepoint": 1.0,
+            "discretepoint": 1.0,
+            "changevar": 1.0,
+            "changefunc": 1.0,
+            "insertsubtree": 1.0,
+            "replacesubtree": 1.0,
+            "removesubtree": 1.0
+          },
+          "mutation_probability": 0.25,
+          "n_threads": 8,
+          "objectives": [
+            "mse",
+            "length"
+          ],
+          "offspring_generator": "basic",
+          "optimizer": "lm",
+          "optimizer_batch_size": 0,
+          "optimizer_iterations": 1000,
+          "optimizer_likelihood": "gaussian",
+          "pool_size": 1000,
+          "population_size": 1000,
+          "random_state": 42,
+          "reinserter": "keep-best",
+          "sgd_beta": 0.9,
+          "sgd_beta2": 0.999,
+          "sgd_epsilon": 1e-06,
+          "sgd_learning_rate": 0.01,
+          "sgd_update_rule": "constant",
+          "symbolic_mode": false,
+          "time_limit": 9223372036854775807,
+          "tournament_size": 3,
+          "uncertainty": [
+            1
+          ]
+        },
+        "elapsed_seconds": 304.28521394729614
+      },
+      "rerun_front_sha256": "965b8a41134d96fb2c46839ce8635cbba292386848b92dfa6b05c49a96504433",
+      "train_ids_sha256": "1c0c9037504758db7d3dd6c7c13349df3aacf3aa3c2fb1299050105b78cc68e5"
+    },
+    {
+      "arm": "orig+z",
+      "seed": 43,
+      "all_expressions_match": true,
+      "candidate_count": 24,
+      "manifest": {
+        "arm": "orig+z",
+        "seed": 43,
+        "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1021-nvidia-aarch64-with-glibc2.39",
+        "source": "/home/birr0/Desktop/flower/papers/wwdc_symbolic_regression/reproduction/experiments/historical/utils.py",
+        "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+        "historical_sha256": {
+          "utils.py": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+          "processing_fun.py": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562"
+        },
+        "versions": {
+          "pyoperon": "0.4.0",
+          "numpy": "2.4.4",
+          "pandas": "3.0.2",
+          "scikit-learn": "1.8.0"
+        },
+        "parameters": {
+          "add_model_intercept_term": true,
+          "add_model_scale_term": true,
+          "allowed_symbols": "add,sub,mul,div,exp,log1p,logabs,constant,variable,pow",
+          "brood_size": 10,
+          "comparison_factor": 0,
+          "crossover_internal_probability": 0.9,
+          "crossover_probability": 1.0,
+          "epsilon": 1e-06,
+          "female_selector": "tournament",
+          "generations": 1000,
+          "initialization_max_depth": 5,
+          "initialization_max_length": 10,
+          "initialization_method": "btc",
+          "irregularity_bias": 0.0,
+          "lamarckian_probability": 1.0,
+          "local_search_probability": 1.0,
+          "male_selector": "tournament",
+          "max_depth": 10,
+          "max_evaluations": 10000000,
+          "max_length": 25,
+          "max_selection_pressure": 100,
+          "model_selection_criterion": "minimum_description_length",
+          "mutation": {
+            "onepoint": 1.0,
+            "discretepoint": 1.0,
+            "changevar": 1.0,
+            "changefunc": 1.0,
+            "insertsubtree": 1.0,
+            "replacesubtree": 1.0,
+            "removesubtree": 1.0
+          },
+          "mutation_probability": 0.25,
+          "n_threads": 8,
+          "objectives": [
+            "mse",
+            "length"
+          ],
+          "offspring_generator": "basic",
+          "optimizer": "lm",
+          "optimizer_batch_size": 0,
+          "optimizer_iterations": 1000,
+          "optimizer_likelihood": "gaussian",
+          "pool_size": 1000,
+          "population_size": 1000,
+          "random_state": 43,
+          "reinserter": "keep-best",
+          "sgd_beta": 0.9,
+          "sgd_beta2": 0.999,
+          "sgd_epsilon": 1e-06,
+          "sgd_learning_rate": 0.01,
+          "sgd_update_rule": "constant",
+          "symbolic_mode": false,
+          "time_limit": 9223372036854775807,
+          "tournament_size": 3,
+          "uncertainty": [
+            1
+          ]
+        },
+        "elapsed_seconds": 322.049204826355
+      },
+      "rerun_front_sha256": "e1d7b8b81d6eb98cfb1c1132578ce689e230f8daaf124e3c59c2d8189cb3bf4e",
+      "train_ids_sha256": "863038b254eb14d3d63c850bf978f76168a715fe0d9d344c0b4f77ee1b75d2e6"
+    },
+    {
+      "arm": "orig+z",
+      "seed": 44,
+      "all_expressions_match": true,
+      "candidate_count": 22,
+      "manifest": {
+        "arm": "orig+z",
+        "seed": 44,
+        "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1021-nvidia-aarch64-with-glibc2.39",
+        "source": "/home/birr0/Desktop/flower/papers/wwdc_symbolic_regression/reproduction/experiments/historical/utils.py",
+        "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+        "historical_sha256": {
+          "utils.py": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+          "processing_fun.py": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562"
+        },
+        "versions": {
+          "pyoperon": "0.4.0",
+          "numpy": "2.4.4",
+          "pandas": "3.0.2",
+          "scikit-learn": "1.8.0"
+        },
+        "parameters": {
+          "add_model_intercept_term": true,
+          "add_model_scale_term": true,
+          "allowed_symbols": "add,sub,mul,div,exp,log1p,logabs,constant,variable,pow",
+          "brood_size": 10,
+          "comparison_factor": 0,
+          "crossover_internal_probability": 0.9,
+          "crossover_probability": 1.0,
+          "epsilon": 1e-06,
+          "female_selector": "tournament",
+          "generations": 1000,
+          "initialization_max_depth": 5,
+          "initialization_max_length": 10,
+          "initialization_method": "btc",
+          "irregularity_bias": 0.0,
+          "lamarckian_probability": 1.0,
+          "local_search_probability": 1.0,
+          "male_selector": "tournament",
+          "max_depth": 10,
+          "max_evaluations": 10000000,
+          "max_length": 25,
+          "max_selection_pressure": 100,
+          "model_selection_criterion": "minimum_description_length",
+          "mutation": {
+            "onepoint": 1.0,
+            "discretepoint": 1.0,
+            "changevar": 1.0,
+            "changefunc": 1.0,
+            "insertsubtree": 1.0,
+            "replacesubtree": 1.0,
+            "removesubtree": 1.0
+          },
+          "mutation_probability": 0.25,
+          "n_threads": 8,
+          "objectives": [
+            "mse",
+            "length"
+          ],
+          "offspring_generator": "basic",
+          "optimizer": "lm",
+          "optimizer_batch_size": 0,
+          "optimizer_iterations": 1000,
+          "optimizer_likelihood": "gaussian",
+          "pool_size": 1000,
+          "population_size": 1000,
+          "random_state": 44,
+          "reinserter": "keep-best",
+          "sgd_beta": 0.9,
+          "sgd_beta2": 0.999,
+          "sgd_epsilon": 1e-06,
+          "sgd_learning_rate": 0.01,
+          "sgd_update_rule": "constant",
+          "symbolic_mode": false,
+          "time_limit": 9223372036854775807,
+          "tournament_size": 3,
+          "uncertainty": [
+            1
+          ]
+        },
+        "elapsed_seconds": 284.1370151042938
+      },
+      "rerun_front_sha256": "7fe2c89f3ba72bd2205928e3c76fa36a7fbb6dec56e681bb22418849b69e9da8",
+      "train_ids_sha256": "41ef8499069dd11493e73515b22a86b3b9e8682dcc66f8c408a377157476d724"
+    }
+  ]
+}

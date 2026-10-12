@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-12",
+  "old_data_sha256": "ca1a4eb6f2f9a3775b470495bf839acc447db8d295a1cec90ac80c8f379c332d",
+  "new_data_sha256": "ef08ac3c0a52823f83578fec6ceb1ecd89653c18283b0cf68440e686c44c901e",
+  "checks": {
+    "train_frame_exact": true,
+    "val_frame_exact": true,
+    "test_frame_exact": true,
+    "orig_matrices_exact": true,
+    "cond_matrices_exact": true,
+    "uncond_matrices_exact": true,
+    "z_matrices_exact": true,
+    "orig+z_matrices_exact": true,
+    "cond+z_matrices_exact": true,
+    "scaler_parameters_exact": true,
+    "seed_42_draw_exact": true,
+    "seed_43_draw_exact": true,
+    "seed_44_draw_exact": true
+  },
+  "samples": [
+    {
+      "split": "train",
+      "rows": 352896,
+      "unique_specObjID": 352896,
+      "id_sha256": "54dc39828eded27546e87d466c7d2a67a5313bbb77253c9d530c7b1486eee0eb",
+      "ordered_id_sha256": "2b998b77886d75bc9036f24c57404af88c1056e534884f35fd952a14b7caeb50",
+      "embedding_rows": 422481,
+      "after_specgals_join": 367609,
+      "after_mask_cut": 353883,
+      "after_redshift_cut": 352918,
+      "after_galspec_join": 352918,
+      "after_target_cleaning": 352896,
+      "z_min": 0.020001614466309547,
+      "z_max": 0.2999948561191559
+    },
+    {
+      "split": "val",
+      "rows": 44246,
+      "unique_specObjID": 44246,
+      "id_sha256": "a17d8cc366725733a7324f515bb733c18db424c8aa577290d83050720f817cb4",
+      "ordered_id_sha256": "a165fd3abd1cdcfefeff9215b98c855ebcaef78aed4721cbf9068a3b3e97311c",
+      "embedding_rows": 52810,
+      "after_specgals_join": 46028,
+      "after_mask_cut": 44368,
+      "after_redshift_cut": 44250,
+      "after_galspec_join": 44250,
+      "after_target_cleaning": 44246,
+      "z_min": 0.02000056393444538,
+      "z_max": 0.2999627888202667
+    },
+    {
+      "split": "test",
+      "rows": 44141,
+      "unique_specObjID": 44141,
+      "id_sha256": "63ae0b47747cbab1225be5495519b70bcb7b5b89cd53ac07f0605ce7889df5b8",
+      "ordered_id_sha256": "2a252ac53ce0315120ed679fabee18c52ef81a6589a999fbf88a5d373b149f5f",
+      "embedding_rows": 52811,
+      "after_specgals_join": 45990,
+      "after_mask_cut": 44267,
+      "after_redshift_cut": 44144,
+      "after_galspec_join": 44144,
+      "after_target_cleaning": 44141,
+      "z_min": 0.02000061422586441,
+      "z_max": 0.29939135909080505
+    }
+  ],
+  "integration": {
+    "reference_checks_passed": 15,
+    "eligible_candidates": 365,
+    "candidate_count": 387,
+    "frozen_selections_test_scores_and_curves_exact": true,
+    "source_path_comparison": "Compared fronts/directory/filename; invocation-relative prefix differs",
+    "comparison_directory": "outputs/validation-only-selection",
+    "output_directory": "outputs/data-validation-2026-10-12"
+  }
+}

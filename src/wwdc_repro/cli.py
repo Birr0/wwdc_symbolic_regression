@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from .data import TARGET, clean_target, load_sample, sample_summary, preprocessing_state
-from .frontier import ARMS, SEEDS, curves, front_path, score_fronts, select_by_budget
+from .frontier import ARMS, SEEDS, curves, front_path, score_fronts, select_by_budget, evaluate_selected
 
 COLOURS = {
     "z": "#777777",
@@ -73,6 +73,9 @@ def manifest(args: argparse.Namespace) -> dict:
         "training_subsample": 10_000,
         "selection": "highest validation R2 for each arm, seed and length budget among printed equations reproducing training R2 within tolerance",
         "tolerance_train_r2": args.tolerance,
+        "test_policy": "Evaluate frozen validation selections; report failures without replacement or successful-seeds-only averaging",
+        "recovered_training_scores_sha256": hashlib.sha256(importlib.resources.files(
+            "wwdc_repro").joinpath("recovered_training_scores.json").read_bytes()).hexdigest(),
         "code": [
             {"file": p.name, "sha256": sha256(p)}
             for p in sorted(Path(__file__).parent.glob("*.py"))
@@ -148,6 +151,7 @@ def check_reference(
         expected = reference["samples"][row.split]
         add(f"{row.split}.rows", row.rows, expected["rows"])
         add(f"{row.split}.id_sha256", row.id_sha256, expected["id_sha256"])
+        add(f"{row.split}.ordered_id_sha256", row.ordered_id_sha256, expected["ordered_id_sha256"])
     add("candidate_count", len(scores), reference["candidate_count"])
     add("selectable_count", int(scores.selectable.sum()), reference["selectable_count"])
     add("selected_budget_count", len(selected), reference["selected_budget_count"])
@@ -183,6 +187,10 @@ def run(args: argparse.Namespace) -> None:
     ).to_csv(args.outdir / "sample_ids.csv.gz", index=False)
     samples = pd.DataFrame(sample_summary(clean))
     samples.to_csv(args.outdir / "samples.csv", index=False)
+    reference = json.loads(importlib.resources.files("wwdc_repro").joinpath("reference.json").read_text())
+    for row in samples.itertuples():
+        if row.ordered_id_sha256 != reference["samples"][row.split]["ordered_id_sha256"]:
+            raise ValueError(f"Sample row order differs for {row.split}; inspect samples.csv before drawing training rows")
     expected = {"train": 352896, "val": 44246, "test": 44141}
     for row in samples.itertuples():
         if row.rows != expected[row.split] or row.unique_specObjID != row.rows:
@@ -197,6 +205,8 @@ def run(args: argparse.Namespace) -> None:
         raise ValueError("Spectrum IDs overlap between splits")
     scores = score_fronts(clean, args.fronts, args.tolerance)
     selected = select_by_budget(scores)
+    selected.to_csv(args.outdir / "selected_before_test.csv", index=False)
+    selected = evaluate_selected(clean, selected)
     summary = curves(selected)
     checks = check_reference(samples, scores, selected)
     (args.outdir / "checks.json").write_text(json.dumps(checks, indent=2) + "\n")

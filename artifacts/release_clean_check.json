@@ -1,0 +1,59 @@
+{
+  "commands": [
+    [
+      "uv",
+      "sync",
+      "--frozen"
+    ],
+    [
+      "uv",
+      "run",
+      "--frozen",
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    [
+      "uv",
+      "run",
+      "--frozen",
+      "wwdc-reproduce",
+      "--help"
+    ],
+    [
+      "uv",
+      "run",
+      "--frozen",
+      "wwdc-figures",
+      "--help"
+    ],
+    [
+      "uv",
+      "run",
+      "--frozen",
+      "wwdc-mlp-probe",
+      "--help"
+    ],
+    [
+      "uv",
+      "run",
+      "--script",
+      "--locked",
+      "experiments/rerun_sr.py",
+      "--help"
+    ],
+    [
+      "uv",
+      "build"
+    ]
+  ],
+  "all_passed": true,
+  "date": "2026-10-12",
+  "scope": "Clean source copy on same host; no hosted CI or public-data download verification",
+  "wheel_resources_present": true,
+  "source_distribution_search_docs_tests_present": true
+}
