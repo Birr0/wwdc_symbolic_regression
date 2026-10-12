@@ -38,14 +38,16 @@ and wheel/source builds. Evidence is in [VALIDATION.md](VALIDATION.md).
   `experiments/investigate_mlp_outliers.py` retains local dataset/upstream defaults
   and is not part of the standalone paper reproduction route.
 
-## Before publication
+## Repository and licence
 
-Confirm the GitHub owner/name, visibility, and repository licence. The vendored
+The review repository is `Birr0/wwdc_symbolic_regression`, private for now at the
+author's request. Repository code is covered by the [MIT licence](../LICENSE).
+The vendored
 historical modules originate in `Birr0/flower`; their MIT notice is preserved in
 [`experiments/historical/LICENSE`](../experiments/historical/LICENSE). Upstream
 `wwdc_spectra` is referenced, not bundled; its GitHub metadata did not declare
 a licence when inspected. Dataset/checkpoint redistribution terms must be
 handled separately from the repository's code licence.
 
-GitHub Actions results should be checked after the first push. Local verification
-does not claim a hosted CI run has already passed.
+GitHub Actions results should be checked for the current commit. Local verification
+and hosted CI are recorded separately.

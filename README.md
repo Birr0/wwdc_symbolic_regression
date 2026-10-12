@@ -32,7 +32,7 @@ That earlier check is not a certification of every current figure or a
 public-input end-to-end run. See [figure definitions](docs/FIGURES.md),
 [validation](docs/VALIDATION.md), and [input acquisition](docs/INPUTS.md).
 Public hosting for the exact checkpoint, embeddings and archived spectrum
-splits, and a code licence, remain release tasks. Neural training has not been
+splits remains a release task. Code is licensed under [MIT](LICENSE). Neural training has not been
 rerun. A fresh conditional-latent-plus-redshift SR search with seed 42 reproduced
 all 23 archived equations, including their 12-decimal exports (2026-10-07,
 pyoperon 0.4.0). The original-latent seed-42 search also reproduced all 24
