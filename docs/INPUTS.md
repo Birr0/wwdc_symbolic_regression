@@ -1,5 +1,14 @@
 # Inputs and acquisition
 
+The complete data bundle has been staged locally for Hugging Face. Its upload is
+pending; see [DATA_RELEASE.md](DATA_RELEASE.md) for contents, profiles and the
+verified downloader. The publication lock is `artifacts/data_release.json`.
+
+The new training/inference source is pinned in
+`artifacts/conditioning/release_upstream.json`; its `paper.py` commands are
+documented upstream in `docs/PAPER_TRAINING.md`. The older pin below records the
+historical checkpoint-wrapper verification.
+
 `artifacts/analysis_inputs.json` records the byte sizes and SHA-256 hashes of
 the exact local embedding shards and analysis catalogues used in the audit.
 Paths are relative to a data root. `artifacts/fronts_manifest.json` covers the
@@ -33,8 +42,8 @@ original membership. Original spectra come from the
 [Multimodal Universe SDSS pipeline](https://github.com/MultimodalUniverse/MultimodalUniverse/tree/main/scripts/sdss).
 
 Public download locations for the exact checkpoint, its YAML, archived split
-dataset, and cached embeddings still need to be assigned. They are not bundled
-in Git. Until then, the demonstrated workflow assumes access to those files.
+dataset and cached embeddings are being prepared in that HF bundle. Large inputs
+are not bundled in Git. Until publication, the workflow requires local copies.
 
 ## Analysis catalogues
 

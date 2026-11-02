@@ -16,6 +16,18 @@ environment automatically. The first run needs access to the dependency packages
 
 ## 2. Set your input paths
 
+Once the [HF release](DATA_RELEASE.md) is published, the downloader writes this
+file automatically:
+
+```bash
+uv run --frozen --extra catalogues python download_data.py
+python3 reproduce.py --config data/paper/reproduction.json
+```
+
+Install the download dependency first with `uv sync --frozen --extra catalogues`.
+Use `download_data.py --profile full` for the additional neural training inputs.
+Until the upload is complete, use existing local inputs as described below.
+
 Edit `reproduction.json`:
 
 | Setting | What to supply |

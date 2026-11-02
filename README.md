@@ -3,9 +3,9 @@
 Reproduce the paper's analysis from saved embeddings and candidate equations,
 including Section 6 (spectral normalisation) and the fibre-mass SR comparison.
 
-**Required data are external.** Exact embeddings and prepared conditioning inputs
-are needed; their public download links are still being prepared. A Git clone
-alone cannot reproduce the paper. See [input availability](docs/INPUTS.md).
+**Data release status:** the exact inputs are packaged, but the Hugging Face
+upload is still pending. The [data release guide](docs/DATA_RELEASE.md) gives the
+download command, package contents and remaining publication step.
 
 ## Reproduce the saved results
 
@@ -39,6 +39,7 @@ not retrain models or rerun symbolic searches. The results index records this sc
 | Need | Read |
 |---|---|
 | Input paths, running the command and expected results | [Reproduction walkthrough](docs/QUICKSTART.md) |
+| Download data or obtain the full training inputs | [Data release](docs/DATA_RELEASE.md) |
 | What each script does | [Script guide](docs/SCRIPTS.md) |
 | Fresh searches, checkpoint inference or model/probe training | [Advanced reproduction](docs/ADVANCED.md) |
 | Scientific checks, provenance and release status | [Technical documentation](docs/README.md) |

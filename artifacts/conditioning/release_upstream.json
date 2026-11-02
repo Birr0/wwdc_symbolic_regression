@@ -1,0 +1,44 @@
+{
+  "repository": "https://github.com/Birr0/wwdc_spectra",
+  "revision": "9349587aaa25c0210ba200b13f123e16084f66ea",
+  "status": "source_pinned_remote_availability_unverified",
+  "files": [
+    {
+      "path": "paper.py",
+      "sha256": "fbb260e949a16b54e21056bc9096dbe1a4d60fe3e2be31061e544bddcea49ed3"
+    },
+    {
+      "path": "paper.py.lock",
+      "sha256": "58e7bc7721f4c3cc41aea4fa2124ada20161ac13140287af09ca511ff27f7ebd"
+    },
+    {
+      "path": "src/conf/paper/redshift.json",
+      "sha256": "2a8f9647f2c7140099f1b2c1ce0e37c2650d9bc7fdc15aa6587c0fd41124b330"
+    },
+    {
+      "path": "src/conf/paper/norm.json",
+      "sha256": "db93b30a032e65eb3d8788d89f1e3dbf588e2cad2f8466c7b45f28bb1804212a"
+    },
+    {
+      "path": "src/wwdc_spectra/data/sdss.py",
+      "sha256": "08588fe00de882854b172751b5b6ac7b3add8ba85e7cd84fbce21304fa2e8f07"
+    },
+    {
+      "path": "src/wwdc_spectra/data/normalisation.py",
+      "sha256": "1c4b70a585d91dfe31ba9483235a26113abc2a2d168563813a3d883ee554b13e"
+    },
+    {
+      "path": "src/wwdc_spectra/models/model.py",
+      "sha256": "faab17e69d219fdef2e9e6061a4f32b622437ef52f1d002c012c292a6e7fb96b"
+    },
+    {
+      "path": "src/wwdc_spectra/models/load_spender.py",
+      "sha256": "673247fa09a59feeb9e68204d33ee9d212bbcc83a8e939291d9636d43312ada6"
+    },
+    {
+      "path": "src/wwdc_spectra/models/modules.py",
+      "sha256": "ca535e2f46859c18326cc20380d92e616f601bcc6c895896f4eb6f35e182d2c5"
+    }
+  ],
+  "notes": "Direct clean checkout for the new training/inference route. Historical upstream.json and patch remain records of their older verification."
+}

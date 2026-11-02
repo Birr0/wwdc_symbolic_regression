@@ -13,6 +13,13 @@ environments because the sandbox blocked uv cache writes; fresh environment
 bootstrap and public-input reproduction remain unverified. See the
 [workflow verification record](../artifacts/reproduction_workflow_verification.json).
 
+The next release adds a verified 1,423-file HF bundle, download profiles and the
+training source pinned in `artifacts/conditioning/release_upstream.json`.
+All 29 reproduction tests and seven upstream tests pass; a local restore of the
+saved data profile passes the complete workflow. The HF upload and remote
+download remain pending. See [DATA_RELEASE.md](DATA_RELEASE.md) and
+[`data_release_verification.json`](../artifacts/data_release_verification.json).
+
 ## Included
 
 - Package commands for saved-equation analysis, figures, checkpoint inference,

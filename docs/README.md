@@ -15,6 +15,7 @@ project; our checkpoint wrapper uses a pinned revision.
 | Inspect catalogue joins, filtering, and scaling | [Data preparation review](DATA_REVIEW.md) |
 | Inspect equation evaluation and model selection | [Equation/selection review](EQUATION_SELECTION_REVIEW.md) |
 | Obtain and verify the inputs | [Inputs](INPUTS.md) |
+| Download the HF bundle or finish publication | [Data release](DATA_RELEASE.md) |
 | Recreate or inspect a plot | [Figure calculations](FIGURES.md) |
 | Find the purpose of every experiment script | [Script guide](SCRIPTS.md) |
 | Reproduce Section 6 (spectral normalisation) and fibre controls | [Conditioning walkthrough](CONDITIONING.md) |

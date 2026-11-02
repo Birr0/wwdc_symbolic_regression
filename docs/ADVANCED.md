@@ -6,7 +6,19 @@ comparison. Section 6 inference, probe training and fibre MLP recipes are in
 [CONDITIONING.md](CONDITIONING.md); fresh SR searches are in
 [the experiment instructions](../experiments/README.md).
 
-## Generate embeddings from the checkpoint
+## Train flows or generate embeddings with the released source
+
+Use the training walkthrough in [wwdc_spectra](https://github.com/Birr0/wwdc_spectra/blob/9349587aaa25c0210ba200b13f123e16084f66ea/docs/PAPER_TRAINING.md).
+It covers `paper.py train` and `paper.py embed` for redshift and NORM,
+using the full HF data bundle. The source commit is pinned in
+`artifacts/conditioning/release_upstream.json`; remote source availability and the
+HF upload are not yet verified.
+
+## Historical checkpoint-inference route
+
+The wrapper below preserves the earlier 32-test-spectrum verification. For the
+new source/data release, use `paper.py embed` above.
+
 
 Use the archived spectrum splits and checkpoint layout in [docs/INPUTS.md](INPUTS.md).
 The wrapper rejects a changed upstream source, a different checkpoint or

@@ -228,21 +228,26 @@ The packaged `val_rescore` is helper-only: its obsolete test-gated CLI was remov
 
 ## Conditional generation and upstream provenance
 
-The current local upstream source differs from its Git revision. The relevant
-changes, including NORM/joint training configurations and the normalisation loader,
-are preserved in `artifacts/conditioning/upstream_changes.patch`; file hashes and
-base revision are in `upstream.json`. Apply them to a **separate clean checkout**:
+Training and inference are now committed in `wwdc_spectra`; use the pinned
+source directly for the new route:
 
 ```bash
 git clone https://github.com/Birr0/wwdc_spectra /path/to/wwdc-spectra-generation
-git -C /path/to/wwdc-spectra-generation checkout 55bee36565e1944c4feeafec7c19525bee3ba200
-git -C /path/to/wwdc-spectra-generation apply /absolute/path/to/reproduction/artifacts/conditioning/upstream_changes.patch
+git -C /path/to/wwdc-spectra-generation checkout 9349587aaa25c0210ba200b13f123e16084f66ea
 ```
 
-This records the observed source used for this reproduction check. It does not
-prove every file was identical when the original checkpoints were trained. Keep training in upstream's framework, with
-its Hydra configurations and W&B logger; refer to its training/inference entry
-points and the saved checkpoint YAML for resolved settings.
+The pinned commit must be available on GitHub before external reproduction;
+remote availability was not verified during local release preparation. The training walkthrough is
+[`docs/PAPER_TRAINING.md`](https://github.com/Birr0/wwdc_spectra/blob/9349587aaa25c0210ba200b13f123e16084f66ea/docs/PAPER_TRAINING.md).
+The `paper.py` entry point supports fresh redshift/NORM training and checkpoint
+embedding generation without W&B credentials. Download the full HF data profile
+as described in [DATA_RELEASE.md](DATA_RELEASE.md).
+
+Source hashes and the pinned commit are in
+`artifacts/conditioning/release_upstream.json`. The older `upstream.json` and
+`upstream_changes.patch` are retained as historical verification records;
+the new route does not require applying that patch. The archived YAMLs record
+the configurations, while exact historical training source remains uncertain.
 
 After `plot_cmd_norm_s`, run:
 

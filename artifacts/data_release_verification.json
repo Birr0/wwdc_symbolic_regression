@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-02",
+  "status": "local_release_verified_upload_pending",
+  "repo_id": "Birr001/wwdc-symbolic-regression",
+  "files": 1423,
+  "bytes": 35951408206,
+  "manifest_sha256": "db9ca34c5581e1e2a2eac47dee6dd57c987bc52d0bf7dc2ddb0807893596015c",
+  "components": {
+    "conditioning": {
+      "files": 293,
+      "bytes": 1156604963
+    },
+    "analysis": {
+      "files": 1037,
+      "bytes": 615981666
+    },
+    "models": {
+      "files": 15,
+      "bytes": 1093763343
+    },
+    "spectra": {
+      "files": 74,
+      "bytes": 33043317228
+    },
+    "generation": {
+      "files": 3,
+      "bytes": 3757595
+    },
+    "pretrained": {
+      "files": 1,
+      "bytes": 37983411
+    }
+  },
+  "checks": {
+    "all_1423_staged_file_hashes": true,
+    "saved_profile_local_restore": true,
+    "generated_reproduction_config": true,
+    "restored_saved_profile_workflow_steps_passed": 12,
+    "redshift_reference_checks_passed": 15,
+    "conditioning_table_comparisons_passed": 3,
+    "reproduction_unit_tests_passed": 29,
+    "upstream_unit_tests_passed": 7,
+    "clean_committed_source_with_staged_full_data_norm_training_smoke": true
+  },
+  "training_source": {
+    "repository": "https://github.com/Birr0/wwdc_spectra",
+    "revision": "9349587aaa25c0210ba200b13f123e16084f66ea"
+  },
+  "not_verified": [
+    "Hugging Face upload and remote download",
+    "New uv environment bootstrap in this sandbox",
+    "Full flow retraining",
+    "Full-dataset checkpoint inference"
+  ],
+  "execution": "Scientific integration uses existing locked Python environments because sandbox blocks uv cache writes; local restore used the same file checks and config writer as the HF route.",
+  "publication_blockers": [
+    "No Hugging Face credential configured",
+    "Network sockets prohibited by the session sandbox"
+  ]
+}

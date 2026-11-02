@@ -20,6 +20,8 @@ jobs:
       - name: Check analysis commands
         run: |
           uv run --frozen python reproduce.py --help
+          uv run --frozen python download_data.py --help
+          uv run --frozen python tools/release_data.py --help
           uv run --frozen wwdc-reproduce --help
           uv run --frozen wwdc-figures --help
           uv run --frozen wwdc-mlp-probe --help
