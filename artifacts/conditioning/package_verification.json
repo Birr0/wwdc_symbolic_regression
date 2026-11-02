@@ -1,0 +1,226 @@
+{
+  "date": "2026-10-19",
+  "unit_tests_passed": 17,
+  "initial_bundle_files_verified": 293,
+  "source_hashes_verified": true,
+  "upstream_patch_applies": true,
+  "patched_upstream_hashes_match": true,
+  "regenerated": [
+    "finalize_conditioning_validation",
+    "norm_input_ablation report",
+    "plot_cmd_norm_s",
+    "plot_norm_cmd_full",
+    "compare_norm_joint_s",
+    "analyse_fibre_original_control",
+    "generate_norm_sequence --n-spectra 5 --seed 42 --factors 0.5 0.75 1 1.25 1.5 1.75 2"
+  ],
+  "reference_tables_verified": 4,
+  "array_checks": [
+    {
+      "path": "norm_cmd_full_2026-10-18/bins_and_contours.npz",
+      "keys": [
+        "counts",
+        "mean_S",
+        "xedges",
+        "yedges",
+        "kx",
+        "ky",
+        "density",
+        "contour_fractions",
+        "contour_levels"
+      ],
+      "agrees": true,
+      "rtol": 1e-06,
+      "atol": 1e-07
+    },
+    {
+      "path": "norm_generation_random_seed42_five/generated_spectra.npz",
+      "keys": [
+        "wave_rest",
+        "decoded_raw",
+        "shape",
+        "amplitude_restored",
+        "original_reconstruction",
+        "conditional_seed",
+        "generated_latents",
+        "factors",
+        "reference_norm"
+      ],
+      "agrees": true,
+      "rtol": 1e-06,
+      "atol": 1e-07
+    },
+    {
+      "path": "norm_generation_random_seed42_five/observed_spectra.npz",
+      "keys": [
+        "wave_rest",
+        "normalised_flux",
+        "flux",
+        "normalisation",
+        "source_test_rows",
+        "specObjID"
+      ],
+      "agrees": true,
+      "rtol": 1e-06,
+      "atol": 1e-07
+    }
+  ],
+  "cmd_rows": 440087,
+  "generation_metadata": {
+    "checkpoint": "/home/birr0/local_data/sdss_II/spender_I_normalisation_flow/ckpts/norm_20261012183217_0.ckpt",
+    "checkpoint_sha256": "c502e59233d28f108160949aa1e2661bdc8cbad3368e5e7e2978cb6eb47192fd",
+    "condition_mean": 1.1450679857900785,
+    "condition_std": 0.27985617596867324,
+    "observed_source_test_rows": [
+      348,
+      20946,
+      26117,
+      20749,
+      5271
+    ],
+    "observed_encoder_max_abs_errors": [
+      5.30928373336792e-05,
+      5.504488945007324e-05,
+      4.2319297790527344e-05,
+      4.597008228302002e-05,
+      3.144890069961548e-05
+    ],
+    "selection_seed": 42,
+    "selection": "Uniform random rows without replacement from finite-context matched CMD test sample; no colour or NORM-magnitude selection",
+    "eligible_rows": 44013,
+    "sampled_row_positions": [
+      34061,
+      19315,
+      28808,
+      3927,
+      19058
+    ],
+    "outside_training_1_99_count": 0,
+    "factors": [
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5,
+      1.75,
+      2.0
+    ],
+    "training_context_1_99_percentiles": [
+      -2.0515567278862,
+      2.8601815676689144
+    ],
+    "generated_contexts": [
+      [
+        -0.5888296218417279,
+        0.040390935632739544,
+        0.4868300259113312,
+        0.8331150870596848,
+        1.1160505833857988,
+        1.355269136983512,
+        1.5624896736643903
+      ],
+      [
+        -1.6180986912749402,
+        -0.9888781338004727,
+        -0.5424390435218811,
+        -0.1961539823735275,
+        0.08678151395258638,
+        0.32600006755029975,
+        0.533220604231178
+      ],
+      [
+        -1.1868244932792775,
+        -0.55760393580481,
+        -0.11116484552621841,
+        0.2351202156221352,
+        0.5180557119482491,
+        0.7572742655459624,
+        0.9644948022268407
+      ],
+      [
+        -0.5352898986838452,
+        0.09393065879062223,
+        0.5403697490692139,
+        0.8866548102175675,
+        1.1695903065436815,
+        1.4088088601413946,
+        1.616029396822273
+      ],
+      [
+        -0.43451739864569827,
+        0.1947031588287692,
+        0.6411422491073608,
+        0.9874273102557145,
+        1.2703628065818284,
+        1.5095813601795416,
+        1.71680189686042
+      ]
+    ],
+    "rows": [
+      {
+        "specObjID": 2501848063031666688,
+        "gr": 0.6387405395507812,
+        "z": 0.13669206202030182,
+        "reference_norm": 19.112184524536133
+      },
+      {
+        "specObjID": 1775640693872551936,
+        "gr": 0.24347496032714844,
+        "z": 0.050894591957330704,
+        "reference_norm": 9.84607219696045
+      },
+      {
+        "specObjID": 2234989712848742400,
+        "gr": 0.7576484680175781,
+        "z": 0.15752527117729187,
+        "reference_norm": 13.000431060791016
+      },
+      {
+        "specObjID": 493319288032094208,
+        "gr": 0.7534465789794922,
+        "z": 0.12939178943634033,
+        "reference_norm": 19.783071517944336
+      },
+      {
+        "specObjID": 1767722555080206336,
+        "gr": 0.6967868804931641,
+        "z": 0.11849027127027512,
+        "reference_norm": 21.110355377197266
+      }
+    ],
+    "saved_20step_embedding_max_abs": 9.5367431640625e-07,
+    "roundtrip_latent_max_abs": 2.518296241760254e-05,
+    "decoder_100_200_step_max_abs": 0.0005631446838378906,
+    "shape_reference_max_abs": 5.221366882324219e-05,
+    "method": "Invert original Spender latents at original NORM with 100-step midpoint, hold each base seed fixed; forward 100-step midpoint at the requested NORM values. Training-percentile checks are recorded without changing the random sample. No redshift conditioning.",
+    "plotting": "Rest-wavelength decoder grid. Left: decoded spectra divided by their 5300\u20135850 Angstrom median. Right: multiply these shapes by requested NORM. Restoring amplitude is explicit, not predicted by the decoder. No luminosity conversion. Grey curves show the observed spectra with masked pixels omitted; reconstruction curves are not plotted."
+  },
+  "not_rerun": [
+    "Full symbolic searches",
+    "Flow training",
+    "MLP training and latent probe training"
+  ],
+  "limitations": [
+    "Same host, not cross-platform verification",
+    "Fibre report consumes archived conditional structural summaries",
+    "Public data/checkpoint downloads still unassigned"
+  ],
+  "clean_install": {
+    "base_package": "uv sync --frozen into /tmp/wwdc-repro-clean-install; 17 tests passed",
+    "experiments": "uv run --script --locked suite.py; frontier and five-spectrum seven-factor generation succeeded",
+    "generation_array_comparison": [
+      {
+        "file": "generated_spectra.npz",
+        "agreement": true,
+        "rtol": 1e-06,
+        "atol": 1e-07
+      },
+      {
+        "file": "observed_spectra.npz",
+        "agreement": true,
+        "rtol": 1e-06,
+        "atol": 1e-07
+      }
+    ]
+  }
+}

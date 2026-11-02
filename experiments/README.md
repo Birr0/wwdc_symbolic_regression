@@ -1,5 +1,12 @@
 # Reproduction experiments
 
+## Exploratory normalisation-only flow
+
+See [the normalisation-flow experiment](NORMALISATION_FLOW.md) for the new
+seed-42 flow conditioned on the exact spectral normalisation factor alone.
+This is separate from the archived paper reproduction and requires the pinned
+upstream training implementation and a GPU-enabled training environment.
+
 ## Seeded symbolic-search reproduction
 
 `rerun_sr.py` calls the historical `utils.fit_sym_fn` unchanged, preserving its
@@ -225,3 +232,10 @@ The large model is preferred by validation for these fixed single-seed runs.
 Repeated test reporting is exploratory, not a new blind evaluation.
 Outputs: outputs/spectra-mlp-sr42-asinh-lr1e-4-{128-64,1024-512}.
 Comparison: outputs/spectra-mlp-sr42-learning-rate-comparison.json.
+
+## Paper NORM and fibre experiments
+
+See [conditioning/README.md](conditioning/README.md) and
+[the walkthrough](../docs/CONDITIONING.md) for the packaged paper analyses.
+These use the newer upstream NORM/joint checkpoints; the exploratory
+normalisation-flow implementation above is retained separately.

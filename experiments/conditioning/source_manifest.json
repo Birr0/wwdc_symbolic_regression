@@ -1,0 +1,206 @@
+{
+  "source": "flower/examples/spectra/symbolic_regression",
+  "date": "2026-10-19",
+  "files": [
+    {
+      "file": "analyse_fibre_mass.py",
+      "source_sha256": "437be60b5a2f4f9ce7d9201d77073d6c8286d4bf1f550c546e61cee351d33bfd",
+      "packaged_sha256": "437be60b5a2f4f9ce7d9201d77073d6c8286d4bf1f550c546e61cee351d33bfd",
+      "adapted": false
+    },
+    {
+      "file": "analyse_fibre_original_control.py",
+      "source_sha256": "5a5a84ea8c071fa8c796043d31d74e09079e5c1b8cad1c44484e183cdfb698e4",
+      "packaged_sha256": "5a5a84ea8c071fa8c796043d31d74e09079e5c1b8cad1c44484e183cdfb698e4",
+      "adapted": false
+    },
+    {
+      "file": "analyse_matched_conditioning.py",
+      "source_sha256": "efb02dc123bcfaaf5d1d2c491a5f4446bfbd45247a84a9834f809a7383652f09",
+      "packaged_sha256": "efb02dc123bcfaaf5d1d2c491a5f4446bfbd45247a84a9834f809a7383652f09",
+      "adapted": false
+    },
+    {
+      "file": "audit_shared_structure.py",
+      "source_sha256": "3891fef8ad95179e2e7abebec7813621c0ef35054140e1d591fe8d386dcbc068",
+      "packaged_sha256": "b5986e196fd3073928c7dce24e87c86f0a1b0bb92545bc59ca6d038a1f287890",
+      "adapted": true
+    },
+    {
+      "file": "check_conditioning_physics.py",
+      "source_sha256": "75c9dbdd2a420094bbd86444faec2ab6d08eba934e61cf51586a3fa7055412cd",
+      "packaged_sha256": "75c9dbdd2a420094bbd86444faec2ab6d08eba934e61cf51586a3fa7055412cd",
+      "adapted": false
+    },
+    {
+      "file": "compare_norm_joint_s.py",
+      "source_sha256": "be3578dc50bac293999dd4e15273c41bf01d2e597fc032b1b9736200ff7d1821",
+      "packaged_sha256": "df1dbd7f98dce0db4013e466ff03e6147aa998e72dd3e19391fd644136a816da",
+      "adapted": true
+    },
+    {
+      "file": "d4000_mlp.py",
+      "source_sha256": "4bf65f166fb9f0326824e65ce14eded5344d792ac2d9ffbeadf989952c016e84",
+      "packaged_sha256": "4bf65f166fb9f0326824e65ce14eded5344d792ac2d9ffbeadf989952c016e84",
+      "adapted": false
+    },
+    {
+      "file": "fibre_mass_conditioning.py",
+      "source_sha256": "80faddfb120c7128933ae09abe5ea734bb45af65f7b9c6678a8438b13e9d486e",
+      "packaged_sha256": "80faddfb120c7128933ae09abe5ea734bb45af65f7b9c6678a8438b13e9d486e",
+      "adapted": false
+    },
+    {
+      "file": "fibre_mass_mlp_control.py",
+      "source_sha256": "ed73213e29e167f2ea15925752beffe015f11db9752e64ece02d13cac2b4bc5d",
+      "packaged_sha256": "ed73213e29e167f2ea15925752beffe015f11db9752e64ece02d13cac2b4bc5d",
+      "adapted": false
+    },
+    {
+      "file": "fibre_mass_original_control.py",
+      "source_sha256": "38b743269e78f8ba83ba22780d7f3c750d8528658e20c87e7b7e8c5fbe4c414f",
+      "packaged_sha256": "38b743269e78f8ba83ba22780d7f3c750d8528658e20c87e7b7e8c5fbe4c414f",
+      "adapted": false
+    },
+    {
+      "file": "figstyle.py",
+      "source_sha256": "c0073fcd4f9bc9a54759afec32ba68a508be44f8d597b6bb63bb075ec6cbf21f",
+      "packaged_sha256": "c0073fcd4f9bc9a54759afec32ba68a508be44f8d597b6bb63bb075ec6cbf21f",
+      "adapted": false
+    },
+    {
+      "file": "finalize_conditioning_validation.py",
+      "source_sha256": "25fd964d55955b408daafb00e7e0c817b5584cddf19c874aacb85b7fa3e4094e",
+      "packaged_sha256": "25fd964d55955b408daafb00e7e0c817b5584cddf19c874aacb85b7fa3e4094e",
+      "adapted": false
+    },
+    {
+      "file": "generate_norm_sequence.py",
+      "source_sha256": "aa8fd22b6c06270b34504fdb7bcb0c5de66f6eec1e67084355b2f6efb58d99ef",
+      "packaged_sha256": "2fd3743886301f5e68dddf6cda01fe8b9f8f6fefe1600c319b0295d524a6f35a",
+      "adapted": true,
+      "plotting_update": "2026-10-20: plot raw decoder outputs; amplitude_restored = decoded_raw * requested NORM; diagnostic shape retained, schema 2"
+    },
+    {
+      "file": "matched_conditioning_controls.py",
+      "source_sha256": "a9810c6547a70e448b24e96d5135fb3742004fd2a690095fa2d62691319d8385",
+      "packaged_sha256": "a9810c6547a70e448b24e96d5135fb3742004fd2a690095fa2d62691319d8385",
+      "adapted": false
+    },
+    {
+      "file": "measure_shared_structure.py",
+      "source_sha256": "b3bbfde5dbbfc9aaf88deddf7f969dba6008c7eaf1d2826d799afccf161534b1",
+      "packaged_sha256": "b3bbfde5dbbfc9aaf88deddf7f969dba6008c7eaf1d2826d799afccf161534b1",
+      "adapted": false
+    },
+    {
+      "file": "norm_conditioning_probe.py",
+      "source_sha256": "c045900ec0f885d0742867f4ff2e9ed5823b05f53f7e8600a0a933c5a1169197",
+      "packaged_sha256": "c045900ec0f885d0742867f4ff2e9ed5823b05f53f7e8600a0a933c5a1169197",
+      "adapted": false
+    },
+    {
+      "file": "norm_input_ablation.py",
+      "source_sha256": "6fcb55ec93712f1507bd70850ebbf6d3349fd284af29e43a2987dc9282d8217f",
+      "packaged_sha256": "6fcb55ec93712f1507bd70850ebbf6d3349fd284af29e43a2987dc9282d8217f",
+      "adapted": false
+    },
+    {
+      "file": "plot_cmd_norm_s.py",
+      "source_sha256": "cc2d2510d3cc4708830aba1666074b1633823eca54bfed99e71b370a854257a4",
+      "packaged_sha256": "c8be4cb82afe1f33e97042eec1c26c8aae45fc6b1d20659cf729440191536387",
+      "adapted": true
+    },
+    {
+      "file": "plot_norm_cmd_full.py",
+      "source_sha256": "94cdca0587088cba7edcef3a3eab599b9d4f806c27b65a4f3708e2b6a8604826",
+      "packaged_sha256": "80f1412441f25ebc92d32bf675daf6d756e788eaec8953983d4b59a1bd268c28",
+      "adapted": true
+    },
+    {
+      "file": "plot_raw_norm_generation.py",
+      "source_sha256": "981eab2ed041c5d543dd5aac29019e3476fd7d7c230de941c8b2c5ec8eeece87",
+      "packaged_sha256": "60f2bf1038b31cb35664990053f4277e21289ff11f61707909c1f80cca1311fb",
+      "adapted": true
+    },
+    {
+      "file": "processing_fun.py",
+      "source_sha256": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562",
+      "packaged_sha256": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562",
+      "adapted": false
+    },
+    {
+      "file": "redshift_conditioning_probe.py",
+      "source_sha256": "e981e11f23daa5ea07aa204c1f2baa7384810052d58b9462ab524c46841d272f",
+      "packaged_sha256": "e981e11f23daa5ea07aa204c1f2baa7384810052d58b9462ab524c46841d272f",
+      "adapted": false
+    },
+    {
+      "file": "rerun_conditioning_exports.py",
+      "source_sha256": "01f9f17b8fd01aa20a117245a2caedf8e2b021b57c4a2bd83ab00c2ec1691481",
+      "packaged_sha256": "01f9f17b8fd01aa20a117245a2caedf8e2b021b57c4a2bd83ab00c2ec1691481",
+      "adapted": false
+    },
+    {
+      "file": "run_normflow.py",
+      "source_sha256": "512e443c00e52c8ae1d59624026720e3cf76c8b2571e0d416be2b81fb36e97e4",
+      "packaged_sha256": "6c1338051c3ce36c652ca0587401a15f560b2759e2bda86d8a332ef7fe98b209",
+      "adapted": true
+    },
+    {
+      "file": "run_total_mass.py",
+      "source_sha256": "d2ffc8e7d67b35880adb1b7c979c73cb8c530604c06710e9b7eb2a11cd21794c",
+      "packaged_sha256": "823c6a52173a7e7a128f9a4d0e9be9c57a796299cb597a3de89d2f2e6de47616",
+      "adapted": true
+    },
+    {
+      "file": "run_znormflow.py",
+      "source_sha256": "d04107b41c89cae0cd92726aa6b36683ffd074308264ccdfb7f3fec844c906cb",
+      "packaged_sha256": "a59e69eb8a50e552066be48026acf41679bdbd5eeab37defe3d4c0e1c5276a08",
+      "adapted": true
+    },
+    {
+      "file": "utils.py",
+      "source_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+      "packaged_sha256": "9ccbe597ea6b604d1eabcad03b79238b0749486db06db0e634e01679ba0a80f0",
+      "adapted": false
+    },
+    {
+      "file": "val_rescore.py",
+      "source_sha256": "eb01be580155126f9af0fb8ebec0861388bebed974c8e184b29293ade8660639",
+      "packaged_sha256": "7e9ea5ea2ae65e6be45286480693ebb450cfe5e8a9731bcd675d37e721a9680b",
+      "adapted": true
+    },
+    {
+      "file": "validate_conditioning.py",
+      "source_sha256": "39511878fb40ccdaea8fda2da5816a93829af9f44bbc57a7ee559a1e1aa65a22",
+      "packaged_sha256": "af3f90814c8d12b263b198d734add6325944e454de3b51ed34202f38a06d7513",
+      "adapted": true
+    },
+    {
+      "file": "cmd_helpers.py",
+      "source_file": "plot_cmd_latent.py",
+      "source_sha256": "cb252ef10c95df3b1022170e0c9a0f7d154135430cff607e1bc5e8ba2cbe8d8b",
+      "packaged_sha256": "221eab045a090c8ff08d45f65be3349daa8c2fb21f4ca58c7682741cac00f162",
+      "adapted": true
+    },
+    {
+      "file": "plot_norm_frontier.py",
+      "packaged_sha256": "498dc19b2002e432ca81726e563d23fce4788a0adf27f1c2d56c73046008cb7a",
+      "origin": "New Figure-1-style renderer for frozen NORM ablation selections",
+      "adapted": false
+    },
+    {
+      "file": "plot_joint_cmd_full.py",
+      "packaged_sha256": "e8ea81eae7462c33f00b32e779b6a46d0b47db6affdef75a44683a1f046f3b77",
+      "origin": "Full-sample Figure 10, frozen selections and paper CMD filters",
+      "adapted": false
+    },
+    {
+      "file": "preview_raw_norm_sequence.py",
+      "packaged_sha256": "ad21396c5c620e0e1db82c89d88c34c7e89dbe3c133e155ff4e568ff97cebb02",
+      "origin": "Replot saved decoder outputs without post-decoder median division",
+      "adapted": false
+    }
+  ]
+}

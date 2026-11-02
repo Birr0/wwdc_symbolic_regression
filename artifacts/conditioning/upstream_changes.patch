@@ -1,0 +1,930 @@
+--- a/src/wwdc_spectra/data/sdss.py
++++ b/src/wwdc_spectra/data/sdss.py
+@@ -22,7 +22,9 @@
+         return_id=False, 
+         return_pos=False,
+         return_mask_ratio=False,
+-        return_mask=False
++        return_mask=False,
++        normalisation_cache=None,
++        normalisation_workers=8,
+     ):
+         if not self.data_exists(): # this needs replaced.
+             if not self.raw_data_exists():
+@@ -73,6 +75,10 @@
+         self.return_pos = return_pos
+         self.return_mask_ratio = return_mask_ratio
+         self.return_mask = return_mask
++        active_variables = set(self.y_catalog["variables"]) - set(self.y_catalog["drop_variables"]) if self.y_catalog else set()
++        if "NORM" in active_variables:
++            from wwdc_spectra.data.normalisation import configure_normalisation
++            configure_normalisation(self, split, normalisation_cache, normalisation_workers)
+     
+     @staticmethod
+     def raw_data_exists():
+@@ -193,6 +199,13 @@
+ 
+         return spec, w, norm, wave_rest, z
+ 
++    def normalisation_condition(self, norm):
++        """Use the actual preprocessing factor, with training-only log scaling."""
++        norm = torch.as_tensor(norm, dtype=torch.float32)
++        if not torch.isfinite(norm) or norm <= 0:
++            raise ValueError("NORM conditioning requires a finite positive preprocessing factor")
++        return (norm.log10() - self.normalisation_stats["mean"]) / self.normalisation_stats["std"]
++
+     @staticmethod
+     def _to_f32_or_nan(x):
+         return torch.tensor(
+@@ -206,7 +219,7 @@
+         item = self.dataset[idx]
+ 
+         # pre-process spectrum
+-        spec, w, _, wave_rest, z = self.prepare_spectrum(
++        spec, w, norm, wave_rest, z = self.prepare_spectrum(
+             flux=item["spectrum"]["flux"],
+             ivar=item["spectrum"]["ivar"],
+             wavelengths=item["spectrum"]["lambda"],
+@@ -217,7 +230,7 @@
+         # Pre-process conditioning data
+         y = torch.stack(
+             [
+-                torch.as_tensor(item[k])
++                self.normalisation_condition(norm) if k == "NORM" else torch.as_tensor(item[k])
+                 for k in self.y_catalog["variables"]
+                 if k not in self.y_catalog["drop_variables"]
+             ]
+--- /dev/null
++++ b/src/wwdc_spectra/data/normalisation.py
+@@ -0,0 +1,80 @@
++"""Exact SDSS normalisation cache and training-only conditioning statistics."""
++import hashlib
++import inspect
++import logging
++import os
++from pathlib import Path
++
++import numpy as np
++from torch.utils.data import DataLoader, Dataset
++
++log = logging.getLogger(__name__)
++
++
++class NormalisationRows(Dataset):
++    def __init__(self, source):
++        self.source = source
++
++    def __len__(self):
++        return len(self.source.dataset)
++
++    def __getitem__(self, index):
++        row = self.source.dataset[index]
++        sp = row["spectrum"]
++        _, _, norm, _, _ = self.source.prepare_spectrum(
++            sp["flux"], sp["ivar"], sp["lambda"], sp["mask"], row["Z"])
++        return index, float(norm)
++
++
++def cached_norms(source, cache_dir, workers):
++    # Include split fingerprint, preprocessing implementation and wavelength/mask
++    # grids: a stale cache must not silently change membership or train scaling.
++    h = hashlib.sha256(inspect.getsource(source.prepare_spectrum).encode())
++    h.update(source.dataset._fingerprint.encode())
++    h.update(source._wave_obs.numpy().tobytes())
++    h.update(source._skyline_mask.numpy().tobytes())
++    cache_dir.mkdir(parents=True, exist_ok=True)
++    path = cache_dir / (h.hexdigest() + ".npy")
++    if path.exists():
++        values = np.load(path, allow_pickle=False)
++        if values.shape != (len(source.dataset),):
++            raise ValueError(f"Invalid normalisation cache shape: {path}")
++        return values, str(path)
++    values = np.full(len(source.dataset), np.nan, dtype=np.float64)
++    loader = DataLoader(NormalisationRows(source), batch_size=512,
++                        num_workers=workers, shuffle=False)
++    for batch, (positions, norms) in enumerate(loader):
++        values[positions.numpy()] = norms.numpy()
++        if batch % 100 == 0:
++            log.info("Computing exact normalisation: %d/%d", min((batch+1)*512, len(values)), len(values))
++    temp = path.with_suffix(f".{os.getpid()}.tmp")
++    with temp.open("wb") as stream:
++        np.save(stream, values)
++    os.replace(temp, path)
++    return values, str(path)
++
++
++def fit_log_scaling(norms):
++    valid = np.isfinite(norms) & (norms > 0)
++    x = np.log10(norms[valid])
++    if len(x) < 2 or not np.isfinite(x.std()) or x.std() <= 0:
++        raise ValueError("Need at least two varying positive training normalisations")
++    return float(x.mean()), float(x.std())
++
++
++def configure_normalisation(source, split, cache_dir, workers):
++    from wwdc_spectra.data.sdss import DATA_DIR, SDSS
++    cache_dir = Path(cache_dir) if cache_dir else Path(DATA_DIR).parent / "normalisation_cache"
++    # This plain training source does not itself request NORM, avoiding recursion.
++    training = source if split == "train" else SDSS(split="train", y_catalog=None)
++    train_norms, train_path = cached_norms(training, cache_dir, workers)
++    mean, std = fit_log_scaling(train_norms)
++    values, path = (train_norms, train_path) if split == "train" else cached_norms(source, cache_dir, workers)
++    valid = np.isfinite(values) & (values > 0)
++    source.normalisation_stats = {
++        "mean": mean, "std": std, "transform": "standardised log10", "fit_split": "train",
++        "parent_rows": len(values), "retained_rows": int(valid.sum()),
++        "excluded_rows": int((~valid).sum()), "cache": path, "training_cache": train_path,
++    }
++    log.info("NORM %s: %s", split, source.normalisation_stats)
++    source.dataset = source.dataset.select(np.flatnonzero(valid).tolist())
+--- a/src/wwdc_spectra/models/model.py
++++ b/src/wwdc_spectra/models/model.py
+@@ -170,7 +170,7 @@
+         return self.linear(x), gate # return gating mechanism
+ 
+ class VelocityField(nn.Module, PyTorchModelHubMixin):
+-    def __init__(self, code_dim, hidden_dim, conditional_dim, n_hidden=3):
++    def __init__(self, code_dim, hidden_dim, conditional_dim, n_layers):
+         super().__init__()
+         self.hidden_dim = hidden_dim
+         self.time_dim = 1
+@@ -180,10 +180,10 @@
+ 
+         self.act = nn.SiLU()
+         self.ada_lns = nn.ModuleList(
+-            [AdaLN(hidden_dim, hidden_dim) for _ in range(n_hidden)]
++            [AdaLN(hidden_dim, hidden_dim) for _ in range(n_layers)]
+         )
+         self.linears = nn.ModuleList(
+-            [nn.Linear(hidden_dim, hidden_dim) for _ in range(n_hidden)]
++            [nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)]
+         )
+         self.out_proj = nn.Linear(hidden_dim, code_dim) 
+ 
+@@ -221,6 +221,7 @@
+         hidden_dim,
+         catalog,
+         n_steps=10,
++        n_layers=3,
+         ckpt_path: str = None,
+         method="midpoint"
+     ):
+@@ -233,7 +234,12 @@
+         self.lr = lr
+ 
+         # --- Models --- #
+-        self.vf = VelocityField(code_dim, hidden_dim, get_conditional_len(catalog))
++        self.vf = VelocityField(
++            code_dim, 
++            hidden_dim, 
++            get_conditional_len(catalog), 
++            n_layers
++        )
+         self.vf.apply(self._init_weights)
+         self.base_model = base_model
+ 
+@@ -241,7 +247,7 @@
+         if ckpt_path:
+             self.vf_state_dict = torch.load(ckpt_path)[
+                 "state_dict"
+-            ]  # map_location="cpu"
++            ]
+             self.load_state_dict(self.vf_state_dict, strict=False)
+             print("✅ Loaded state dict from checkpoint.")
+             self.wrapped_vf = WrappedModel(self.vf)
+@@ -307,6 +313,11 @@
+         self.log(f"{partition}_loss", loss)
+         return loss
+ 
++    def on_train_start(self):
++        total_params = sum(p.numel() for p in self.vf.parameters())
++        self.log("vf_total_params", total_params)
++        print(f"\nModel Parameter Count: {total_params:,}")
++
+     def training_step(self, batch, _batch_idx):
+         return self.base_step(batch, "train")
+ 
+@@ -324,8 +335,6 @@
+             if "orig" in embed_opt:
+                 output["orig"] = code
+             
+-            
+-            # could reduce this to a single forward pass.
+             if "cond" in embed_opt:
+                 output["cond"] = self.solver.sample(
+                     x_init=code,
+--- a/src/wwdc_spectra/training/train.py
++++ b/src/wwdc_spectra/training/train.py
+@@ -31,7 +31,7 @@
+         print("Size of the dataloaders")
+         print(f"Train: {len(train_dataloader)}")
+         print(f"Val: {len(val_dataloader)}")
+-        print(f"Test: {len(val_dataloader)}")
++        print(f"Test: {len(test_dataloader)}")
+ 
+         log.info("Data loaders initialized.")
+     except Exception as e:
+@@ -67,8 +67,17 @@
+     try:
+         if "run_id" in cfg:
+             OmegaConf.update(cfg, "logger.wandb.id", f"{cfg.run_id}")
+-        wandb = hydra.utils.instantiate(cfg.logger.wandb)
++        from lightning.pytorch.loggers import WandbLogger
++        wandb = next(logger for logger in trainer.loggers if isinstance(logger, WandbLogger))
++        normalisation = {
++            split: dataset.normalisation_stats
++            for split, dataset in data.datasets.items()
++            if hasattr(dataset, "normalisation_stats")
++        }
++        if normalisation:
++            OmegaConf.update(cfg, "normalisation", normalisation, force_add=True)
+         if "run_id" in cfg:
++            wandb._wandb_init["id"] = str(cfg.run_id)
+             wandb._wandb_init["resume"] = "must"
+         wandb.log_hyperparams(cfg)
+         log.info("Wandb logger initialized.")
+@@ -107,7 +116,7 @@
+ 
+     try:
+         job_id = HydraConfig.get().job.id
+-        track_weights(cfg, job_id)
++        track_weights(cfg, cfg.logger.wandb.id)
+         log.info("Weights tracking on local machine completed.")
+     except Exception as e:
+         msg = f"Failed to track the weights for job: {HydraConfig.get().job.id}. \
+--- a/src/wwdc_spectra/inference/embed.py
++++ b/src/wwdc_spectra/inference/embed.py
+@@ -1,6 +1,7 @@
+ import logging
+ from pathlib import Path
+ 
++import torch
+ import hydra
+ from hydra.core.global_hydra import GlobalHydra
+ from lightning.pytorch import seed_everything
+@@ -56,82 +57,167 @@
+         msg = f"Error instantiating lightning loader: {e}"
+         log.error(msg)
+         raise e
+-
++    
+     for name, split in split_dataloaders.items():
+-        if split["call"]:
++        if not split["call"]:
++            continue
++
++        path = Path(cfg.paths.embed_dir) / str(model_id) / name
++        path.mkdir(parents=True, exist_ok=True)
++
++        writer = None
++
++        try:
+             for idx, batch in enumerate(split["dataloader"]):
+-                if (cfg.batch_limit is not None):
+-                    if idx >= cfg.batch_limit:
+-                        break
+-                try:
+-                    # need to add embed_opt to the config.
+-                    X, y, spec_id, obj_id, ra, dec, z, mask_ratio = batch
++                if cfg.batch_limit is not None and idx >= cfg.batch_limit:
++                    break
++
++                X, y, spec_id, obj_id, ra, dec, z, mask_ratio = batch
++
++                with torch.inference_mode():
+                     predictions = lightning_loader.predict_step(
+-                        X=X, y=y, embed_opt=cfg.embed_opt
++                        X=X,
++                        y=y,
++                        embed_opt=cfg.embed_opt,
+                     )
+ 
+-                    data = {k: v.tolist() for k, v in predictions.items()}
+-                    
+-                    #data["spectrum"] = X.tolist()
+-                    # add id
+-                    data["id"] = spec_id
+-                    data["BESTOBJID"] = obj_id
+-                    # positional info
+-                    data["z"] = z.tolist()
+-                    data["ra"] = ra.tolist()
+-                    data["dec"] = dec.tolist()
+-                    data["mask_ratio"] = mask_ratio.tolist()
+-
+-                    path = Path(cfg.paths.embed_dir + f"{model_id}/{name}/")
+-                    if not path.exists():
+-                        path.mkdir(parents=True, exist_ok=True)
+-
+-                    pq.write_table(pa.table(data), path / f"{idx}.parquet")
++                data = {
++                    k: v.detach().cpu().tolist()
++                    for k, v in predictions.items()
++                }
++
++                data["id"] = (
++                    spec_id.detach().cpu().numpy()
++                    if hasattr(spec_id, "detach")
++                    else spec_id
++                )
++                data["BESTOBJID"] = (
++                    obj_id.detach().cpu().numpy()
++                    if hasattr(obj_id, "detach")
++                    else obj_id
++                )
++
++                # conditioning values as fed to the flow (e.g. standardised NORM)
++                data["y"] = y.detach().cpu().tolist()
++                data["z"] = z.detach().cpu().numpy()
++                data["ra"] = ra.detach().cpu().numpy()
++                data["dec"] = dec.detach().cpu().numpy()
++                data["mask_ratio"] = mask_ratio.detach().cpu().numpy()
++
++                table = pa.table(data)
++
++                if writer is None:
++                    writer = pq.ParquetWriter(
++                        path / "embeddings.parquet",
++                        table.schema,
++                        compression="zstd",
++                    )
++
++                writer.write_table(table)
++
++        except Exception as e:
++            msg = f"Error creating embeddings for split {name}: {e}"
++            log.error(msg)
++            raise
++
++        finally:
++            if writer is not None:
++                writer.close()
++
++    log.info("Inference complete.")
++    return
++
++
++if __name__ == "__main__":
++    GlobalHydra.instance().clear()
++    main()
++
++
++'''
++try:
++    cfg.logger.wandb.tags.append(str(model_id))
++    cfg.logger.wandb.id = model_id
++    cfg.logger.wandb.name = f"{model_id}_{cfg.meta.experiment_name}"
++    # wandb_logger = hydra.utils.instantiate(cfg.logger.wandb)
++    msg = "Wandb logger instantiated."
++    log.info(msg)
++
++except Exception as e:
++    msg = f"Error instantiating wandb logger: {e}"
++    log.error(msg)
++    raise e
++
++
++try:
++    print(f"wandb_logger: {wandb_logger}")
++    print(
++        f"wandb_logger._wandb_init['mode']:\
++            {wandb_logger._wandb_init['mode']}"
++    )
++    if wandb_logger._wandb_init["mode"] == "online":
++        wandb_logger.log_table(
++            key=f"{model_id}_{name}_embeddings",
++            dataframe=wandb_format(embeddings, cfg.data.x_ds),
++        )
++        print("Logged embeddings to wandb.")
++        msg = "Logged embeddings to wandb."
++        log.info(msg)
++except Exception as e:
++    msg = f"Error logging embeddings to wandb: {e}"
++    log.error(msg)
++    raise e
++'''
++'''
++for name, split in split_dataloaders.items():
++        path = Path(cfg.paths.embed_dir) / str(model_id) / name
++        path.mkdir(parents=True, exist_ok=True)
++
++        writer = None
++        try:
++            if split["call"]:
++                for idx, batch in enumerate(split["dataloader"]):
++                    if (cfg.batch_limit is not None):
++                        if idx >= cfg.batch_limit:
++                            break
++                    try:
++                        # need to add embed_opt to the config.
++                        X, y, spec_id, obj_id, ra, dec, z, mask_ratio = batch
++                        with torch.inference_mode():
++                            predictions = lightning_loader.predict_step(
++                                X=X, y=y, embed_opt=cfg.embed_opt
++                            )
++
++                        data = {k: v.detach().cpu().numpy() for k, v in predictions.items()}
++                        
++            
++                        data["id"] = spec_id
++                        data["BESTOBJID"] = obj_id
++                        # positional info
++                        data["z"] = z.detach().cpu().numpy()
++                        data["ra"] = ra.detach().cpu().numpy()
++                        data["dec"] = dec.detach().cpu().numpy()
++                        data["mask_ratio"] = mask_ratio.detach().cpu().numpy()
++
++                        path = Path(cfg.paths.embed_dir + f"{model_id}/{name}/")
++                        if not path.exists():
++                            path.mkdir(parents=True, exist_ok=True)
++
++                        #pq.write_table(pa.table(data), path / f"{idx}.parquet")
++                        table = pa.table(data)
++
++                        if writer is None:
++                            writer = pq.ParquetWriter(
++                                path / "embeddings.parquet",
++                                table.schema,
++                                compression="zstd",
++                            )
++
++                        writer.write_table(table)
++    
+ 
+                 except Exception as e:
+                     msg = f"Error creating embeddings: {e}"
+                     log.error(msg)
+                     raise e
+ 
+-            '''
+-            try:
+-                cfg.logger.wandb.tags.append(str(model_id))
+-                cfg.logger.wandb.id = model_id
+-                cfg.logger.wandb.name = f"{model_id}_{cfg.meta.experiment_name}"
+-                # wandb_logger = hydra.utils.instantiate(cfg.logger.wandb)
+-                msg = "Wandb logger instantiated."
+-                log.info(msg)
+-
+-            except Exception as e:
+-                msg = f"Error instantiating wandb logger: {e}"
+-                log.error(msg)
+-                raise e
+-            
+-            
+-            try:
+-                print(f"wandb_logger: {wandb_logger}")
+-                print(
+-                    f"wandb_logger._wandb_init['mode']:\
+-                        {wandb_logger._wandb_init['mode']}"
+-                )
+-                if wandb_logger._wandb_init["mode"] == "online":
+-                    wandb_logger.log_table(
+-                        key=f"{model_id}_{name}_embeddings",
+-                        dataframe=wandb_format(embeddings, cfg.data.x_ds),
+-                    )
+-                    print("Logged embeddings to wandb.")
+-                    msg = "Logged embeddings to wandb."
+-                    log.info(msg)
+-            except Exception as e:
+-                msg = f"Error logging embeddings to wandb: {e}"
+-                log.error(msg)
+-                raise e
+-            '''
+-
+-    log.info("Inference complete.")
+-    return
+-
+-
+-if __name__ == "__main__":
+-    GlobalHydra.instance().clear()
+-    main()
++'''
+\ No newline at end of file
+--- a/src/wwdc_spectra/inference/modules.py
++++ b/src/wwdc_spectra/inference/modules.py
+@@ -76,9 +76,13 @@
+     job_ids = []
+     job_nums = []
+ 
++    # last.ckpt (save_last) is a duplicate of a numbered checkpoint, not a job.
++    ckpt_files = [f for f in ckpt_files if f.stem != "last"]
++
+     for ckpt_file in ckpt_files:
+         if len(ckpt_file.stem.split("_")) > 1:
+-            job_id, job_num = ckpt_file.stem.split("_")
++            # rsplit so run-tagged stems like norm_20261012183217_0 parse too.
++            job_id, job_num = ckpt_file.stem.rsplit("_", 1)
+ 
+         else:
+             job_id = ckpt_file.stem
+--- /dev/null
++++ b/src/conf/data/sdss_normalisation.yaml
+@@ -0,0 +1,40 @@
++x_ds:
++  dataset_name: "sdss"
++  fp: ${meta.data_path}
++  type: "spectra"
++  augmentations: none #${..augmentations}
++  size: 3921
++
++y_catalog:
++  catalog_name: "sdss"
++  fp: null
++  join_method: null
++  variables:
++    NORM:
++      name: "standardised_log10_spectral_normalisation"
++      size: 1
++      processing_fn: null
++  drop_variables: []
++
++loader:
++  _target_: wwdc_spectra.data.modules.WWDCDataLoader
++  datasets:
++    train:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "train"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++    val:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "val"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++    test:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "test"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++  batch_size: 512
++  random_state: ${seed}
++  shuffle: true
++  num_workers: 8
+--- /dev/null
++++ b/src/conf/data/sdss_z_normalisation.yaml
+@@ -0,0 +1,44 @@
++x_ds:
++  dataset_name: "sdss"
++  fp: ${meta.data_path}
++  type: "spectra"
++  augmentations: none #${..augmentations}
++  size: 3921
++
++y_catalog:
++  catalog_name: "sdss"
++  fp: null
++  join_method: null
++  variables:
++    Z:
++      name: "redshift"
++      size: 1
++      processing_fn: null
++    NORM:
++      name: "standardised_log10_spectral_normalisation"
++      size: 1
++      processing_fn: null
++  drop_variables: []
++
++loader:
++  _target_: wwdc_spectra.data.modules.WWDCDataLoader
++  datasets:
++    train:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "train"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++    val:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "val"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++    test:
++      _target_: wwdc_spectra.data.sdss.SDSS
++      split: "test"
++      x_ds: ${....x_ds}
++      y_catalog: ${....y_catalog}
++  batch_size: 512
++  random_state: ${seed}
++  shuffle: true
++  num_workers: 8
+--- /dev/null
++++ b/src/conf/experiment/spender_I_normalisation_flow/embed.yaml
+@@ -0,0 +1,53 @@
++# @package _global_
++defaults:
++  - /data/sdss_normalisation
++  - /trainer/gpu
++  - /logger/wandb
++  - /paths/default
++  - /hydra/default
++  - model
++  - sweeps
++  - meta
++  - _self_
++
++lightning_loader:
++  ckpt_path: null # let the code populate this.
++
++splits:
++  - train
++  - test
++  - val
++
++embed_opt:
++  - "orig"
++  - "cond"
++  - "uncond"
++
++paths:
++  embed_dir: ${paths.experiment_path}/embeddings/
++
++batch_limit: null
++
++logger:
++  wandb:
++    mode: offline
++
++data:
++  loader:
++    shuffle: False
++
++hydra:
++  sweeper:
++    params:
++      ++data.y_catalog.drop_variables: ${....sweeps.drop_variables.0}
++      +seed: ${....sweeps.seeds.0}
++      +data.loader.datasets.test.return_id: true
++      +data.loader.datasets.test.return_pos: true
++      +data.loader.datasets.test.return_mask_ratio: true
++      +data.loader.datasets.val.return_id: true
++      +data.loader.datasets.val.return_pos: true
++      +data.loader.datasets.val.return_mask_ratio: true
++      +data.loader.datasets.train.return_id: true
++      +data.loader.datasets.train.return_pos: true
++      +data.loader.datasets.train.return_mask_ratio: true
++      +lightning_loader.n_steps: 20
+--- /dev/null
++++ b/src/conf/experiment/spender_I_normalisation_flow/meta.yaml
+@@ -0,0 +1,12 @@
++meta:
++  authors:
++  - BR
++  data_id: 3
++  data_name: sdss_II
++  description: Flow conditioned only on training-standardised log10 spectral normalisation.
++  experiment_id: 5
++  experiment_name: spender_I_normalisation_flow
++  experiment_path: ${paths.data_dir}/${meta.data_name}/${meta.experiment_name}/
++  version: 1.0
++  data_path: ${paths.data_dir}/${meta.data_name}
++  scratch_data_path: ${paths.scratch_data_dir}/${meta.data_name}/${hydra:job.id}
+--- /dev/null
++++ b/src/conf/experiment/spender_I_normalisation_flow/model.yaml
+@@ -0,0 +1,40 @@
++code_dim: 10
++lightning_loader:
++  _target_: wwdc_spectra.models.model.LightningFlowMatching
++  base_model:
++    _target_: wwdc_spectra.models.load_spender.PretrainedSpender
++    model: "sdss_I"
++    latent_dim: ${code_dim}
++  lr: 0.0001
++  code_dim: ${code_dim}
++  hidden_dim: 1024
++  n_layers: 3
++  catalog: ${data.y_catalog}
++  batch_size: ${data.loader.batch_size}
++  # need to be able to add layers here.
++
++model_checkpoint: # this can be more general. Import from checkpoints and change monitor.
++  _target_: lightning.pytorch.callbacks.ModelCheckpoint
++  dirpath: ${paths.experiment_path}/ckpts/
++  save_top_k: 1
++  filename: ${hydra:job.id}
++  monitor: val_loss
++  mode: min
++
++early_stopping:
++  _target_: lightning.pytorch.callbacks.EarlyStopping
++  monitor: val_loss
++  patience: 10
++  min_delta: 0.0001
++  mode: min
++
++trainer:
++  logger:
++    - ${logger.wandb}
++    - ${logger.csv}
++
++  callbacks:
++    - ${...model_checkpoint}
++    - ${...early_stopping}
++
++trainer_ckpt_path: null # resume training from this checkpoint if avaialble
+--- /dev/null
++++ b/src/conf/experiment/spender_I_normalisation_flow/sweeps.yaml
+@@ -0,0 +1,7 @@
++sweeps:
++  drop_variables:
++    - '[]'
++  seeds:
++    - 42
++    - 43
++    - 44
+--- /dev/null
++++ b/src/conf/experiment/spender_I_normalisation_flow/train.yaml
+@@ -0,0 +1,34 @@
++# @package _global_
++
++defaults:
++- /data/sdss_normalisation
++- /trainer/gpu
++- /logger/wandb
++- /logger/csv
++- /paths/default
++- /hydra/default
++- model
++- sweeps
++- meta
++- _self_
++
++hydra:
++  sweeper:
++    params:
++      ++data.y_catalog.drop_variables: ${....sweeps.drop_variables.0} 
++      +seed: ${....sweeps.seeds.0}
++
++trainer:
++  max_epochs: 100
++  log_every_n_steps: 50
++
++# Unique run/checkpoint IDs also when using Hydra's local basic launcher.
++run_tag: ${now:%Y%m%d_%H%M%S}
++logger:
++  wandb:
++    id: norm_${run_tag}_${hydra:job.num}
++    name: norm_seed${seed}_${run_tag}
++    tags: [normalisation_only, "seed${seed}"]
++model_checkpoint:
++  filename: norm_${run_tag}_${hydra:job.num}
++  save_last: true
+--- /dev/null
++++ b/src/conf/experiment/spender_I_z_normalisation_flow/embed.yaml
+@@ -0,0 +1,53 @@
++# @package _global_
++defaults:
++  - /data/sdss_z_normalisation
++  - /trainer/gpu
++  - /logger/wandb
++  - /paths/default
++  - /hydra/default
++  - model
++  - sweeps
++  - meta
++  - _self_
++
++lightning_loader:
++  ckpt_path: null # let the code populate this.
++
++splits:
++  - train
++  - test
++  - val
++
++embed_opt:
++  - "orig"
++  - "cond"
++  - "uncond"
++
++paths:
++  embed_dir: ${paths.experiment_path}/embeddings/
++
++batch_limit: null
++
++logger:
++  wandb:
++    mode: offline
++
++data:
++  loader:
++    shuffle: False
++
++hydra:
++  sweeper:
++    params:
++      ++data.y_catalog.drop_variables: ${....sweeps.drop_variables.0}
++      +seed: ${....sweeps.seeds.0}
++      +data.loader.datasets.test.return_id: true
++      +data.loader.datasets.test.return_pos: true
++      +data.loader.datasets.test.return_mask_ratio: true
++      +data.loader.datasets.val.return_id: true
++      +data.loader.datasets.val.return_pos: true
++      +data.loader.datasets.val.return_mask_ratio: true
++      +data.loader.datasets.train.return_id: true
++      +data.loader.datasets.train.return_pos: true
++      +data.loader.datasets.train.return_mask_ratio: true
++      +lightning_loader.n_steps: 20
+--- /dev/null
++++ b/src/conf/experiment/spender_I_z_normalisation_flow/meta.yaml
+@@ -0,0 +1,12 @@
++meta:
++  authors:
++  - BR
++  data_id: 3
++  data_name: sdss_II
++  description: Flow conditioned on redshift and training-standardised log10 spectral normalisation.
++  experiment_id: 5
++  experiment_name: spender_I_z_normalisation_flow
++  experiment_path: ${paths.data_dir}/${meta.data_name}/${meta.experiment_name}/
++  version: 1.0
++  data_path: ${paths.data_dir}/${meta.data_name}
++  scratch_data_path: ${paths.scratch_data_dir}/${meta.data_name}/${hydra:job.id}
+--- /dev/null
++++ b/src/conf/experiment/spender_I_z_normalisation_flow/model.yaml
+@@ -0,0 +1,40 @@
++code_dim: 10
++lightning_loader:
++  _target_: wwdc_spectra.models.model.LightningFlowMatching
++  base_model:
++    _target_: wwdc_spectra.models.load_spender.PretrainedSpender
++    model: "sdss_I"
++    latent_dim: ${code_dim}
++  lr: 0.0001
++  code_dim: ${code_dim}
++  hidden_dim: 1024
++  n_layers: 3
++  catalog: ${data.y_catalog}
++  batch_size: ${data.loader.batch_size}
++  # need to be able to add layers here.
++
++model_checkpoint: # this can be more general. Import from checkpoints and change monitor.
++  _target_: lightning.pytorch.callbacks.ModelCheckpoint
++  dirpath: ${paths.experiment_path}/ckpts/
++  save_top_k: 1
++  filename: ${hydra:job.id}
++  monitor: val_loss
++  mode: min
++
++early_stopping:
++  _target_: lightning.pytorch.callbacks.EarlyStopping
++  monitor: val_loss
++  patience: 10
++  min_delta: 0.0001
++  mode: min
++
++trainer:
++  logger:
++    - ${logger.wandb}
++    - ${logger.csv}
++
++  callbacks:
++    - ${...model_checkpoint}
++    - ${...early_stopping}
++
++trainer_ckpt_path: null # resume training from this checkpoint if avaialble
+--- /dev/null
++++ b/src/conf/experiment/spender_I_z_normalisation_flow/sweeps.yaml
+@@ -0,0 +1,7 @@
++sweeps:
++  drop_variables:
++    - '[]'
++  seeds:
++    - 42
++    - 43
++    - 44
+--- /dev/null
++++ b/src/conf/experiment/spender_I_z_normalisation_flow/train.yaml
+@@ -0,0 +1,34 @@
++# @package _global_
++
++defaults:
++- /data/sdss_z_normalisation
++- /trainer/gpu
++- /logger/wandb
++- /logger/csv
++- /paths/default
++- /hydra/default
++- model
++- sweeps
++- meta
++- _self_
++
++hydra:
++  sweeper:
++    params:
++      ++data.y_catalog.drop_variables: ${....sweeps.drop_variables.0} 
++      +seed: ${....sweeps.seeds.0}
++
++trainer:
++  max_epochs: 100
++  log_every_n_steps: 50
++
++# Unique run/checkpoint IDs also when using Hydra's local basic launcher.
++run_tag: ${now:%Y%m%d_%H%M%S}
++logger:
++  wandb:
++    id: znorm_${run_tag}_${hydra:job.num}
++    name: znorm_seed${seed}_${run_tag}
++    tags: [z_and_normalisation, "seed${seed}"]
++model_checkpoint:
++  filename: znorm_${run_tag}_${hydra:job.num}
++  save_last: true

@@ -1,0 +1,79 @@
+{
+  "repository": "https://github.com/Birr0/wwdc_spectra",
+  "base_revision": "55bee36565e1944c4feeafec7c19525bee3ba200",
+  "files": [
+    {
+      "path": "src/wwdc_spectra/data/sdss.py",
+      "sha256": "08588fe00de882854b172751b5b6ac7b3add8ba85e7cd84fbce21304fa2e8f07"
+    },
+    {
+      "path": "src/wwdc_spectra/data/normalisation.py",
+      "sha256": "1c4b70a585d91dfe31ba9483235a26113abc2a2d168563813a3d883ee554b13e"
+    },
+    {
+      "path": "src/wwdc_spectra/models/model.py",
+      "sha256": "9dd1eeb64a88973d14624073e96d10e907453b58664d07611e6b29bd1c147646"
+    },
+    {
+      "path": "src/wwdc_spectra/training/train.py",
+      "sha256": "50f60179034d9092aff7c3b591229c44c1cdaec2e81e94c5d89ffb55c9a1e250"
+    },
+    {
+      "path": "src/wwdc_spectra/inference/embed.py",
+      "sha256": "b0590b7c96e61ac481fe1b8d8e958d7db68fc0f7e2e7e8e5e99dda29ff5f4c3e"
+    },
+    {
+      "path": "src/wwdc_spectra/inference/modules.py",
+      "sha256": "16b41281f31dc5996b2e192fe9a05a04ba91be422b73734b476e6804459656dd"
+    },
+    {
+      "path": "src/conf/data/sdss_normalisation.yaml",
+      "sha256": "0ce47597bddb7b1b603d5d70a7e5639ad736b26be5b8a86215938a3483b6662d"
+    },
+    {
+      "path": "src/conf/data/sdss_z_normalisation.yaml",
+      "sha256": "dbcbaf465eaca0c59ea2a8505ac00df75507e2ecbb93bb222765c23085fb3e4f"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_normalisation_flow/embed.yaml",
+      "sha256": "09fe68c33f3bb28aa7aa6bd5b87a1ed3cc3d6e5e0ae66908c026194148387a1f"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_normalisation_flow/meta.yaml",
+      "sha256": "72c0cfff89155c4e0efb8c15eb6cf19a31735bcc827543184ecbfb0cc8ec4b2a"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_normalisation_flow/model.yaml",
+      "sha256": "6838964255ea27e38d3419535cbaa47b812631943524625d275738838bb32441"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_normalisation_flow/sweeps.yaml",
+      "sha256": "a5753b5fc1cb211dfebf5e247f01382feb26dae6ba34b4eeffe17319b7450d92"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_normalisation_flow/train.yaml",
+      "sha256": "5f2294e00539fcfc859f51d7eca16d03a554defcd286dc4e4205e1222500f41b"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_z_normalisation_flow/embed.yaml",
+      "sha256": "d5cf6ba43762437328f0de8efaedae262e6d02d877468ab491f00ee483af4bb2"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_z_normalisation_flow/meta.yaml",
+      "sha256": "cc323fa5ce28a22d288884447fa1da0b98270bb9c2722ace17e9f50db88aca99"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_z_normalisation_flow/model.yaml",
+      "sha256": "6838964255ea27e38d3419535cbaa47b812631943524625d275738838bb32441"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_z_normalisation_flow/sweeps.yaml",
+      "sha256": "a5753b5fc1cb211dfebf5e247f01382feb26dae6ba34b4eeffe17319b7450d92"
+    },
+    {
+      "path": "src/conf/experiment/spender_I_z_normalisation_flow/train.yaml",
+      "sha256": "28cdae1f0726574da826ee9ef48bbe9f8d4724bac7be7bab26531b0534e108ab"
+    }
+  ],
+  "note": "Observed current source and relevant uncommitted changes; not proof of exact historical training source. Apply patch to a separate clean checkout at base_revision."
+}

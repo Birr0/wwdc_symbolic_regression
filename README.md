@@ -201,3 +201,10 @@ Files are under `src/wwdc_repro/`:
 | `catalogue.py` | Rebuild the CMD cache from pinned mirror shards |
 | `embedding.py` | Checkpoint inference using the pinned upstream source |
 | `mlp_probe.py` | Matched original-plus-redshift and conditional-plus-redshift MLP probe |
+
+## NORM conditioning and fibre appendix
+
+Code, input manifests and reproduction commands for the new analyses are in
+[the conditioning walkthrough](docs/CONDITIONING.md). This includes validation
+selection, NORM ablation, latent probes, conditional generation, CMD figures and
+fibre-mass controls. Large inputs and checkpoints remain external.
