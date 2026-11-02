@@ -1,98 +1,105 @@
-# Reproduce the saved-equation analysis
+# Reproduce the saved paper results
 
-Run the commands below from the repository root, which contains `pyproject.toml`.
-This route evaluates bundled candidate equations; it does not train a flow or
-launch a symbolic-regression search. Python 3.12+ and `uv` are required.
+The normal workflow uses one input-path file and one command. It evaluates saved
+equations and recreates figures/tables; it does not launch training or fresh searches.
+Use Python 3.12 and run the following commands from the repository root.
 
-## 1. Install and check the package
+## 1. Install
 
 ```bash
 uv sync --frozen
-uv run --frozen python -m unittest discover -s tests -v
-uv run --frozen wwdc-reproduce --help
+cp reproduction.example.json reproduction.json
 ```
 
-These checks do not require the paper's external datasets. They are not a
-substitute for the full numerical reproduction below.
+The runner uses the base package environment and a separately locked conditioning
+environment automatically. The first run needs access to the dependency packages.
 
-## 2. Locate the exact inputs
+## 2. Set your input paths
 
-Follow [INPUTS.md](INPUTS.md) for expected versions, checksums, and acquisition
-limits. Public locations for the exact embeddings and model products have not
-yet been assigned. Do not substitute newly generated splits for the archives.
+Edit `reproduction.json`:
 
-Set paths appropriate to your machine:
-
-```bash
-WWDC_EMBEDDINGS=/absolute/path/to/embeddings/7655991_0
-WWDC_GALSPEC=/absolute/path/to/galSpecExtra-dr8.fits
-WWDC_SPECGALS=/absolute/path/to/sdss
-```
-
-The embeddings directory contains `train/`, `val/`, and `test/` parquet shards.
-The specgals directory contains both `SDSSspecgalsDR8_*.fit.gz` catalogue files.
-The eighteen candidate CSVs are already included in `artifacts/fronts/`.
-
-## 3. Evaluate and select equations
-
-```bash
-uv run --frozen wwdc-reproduce \
-  --embeddings "$WWDC_EMBEDDINGS" \
-  --galspec "$WWDC_GALSPEC" \
-  --specgals-home "$WWDC_SPECGALS" \
-  --fronts artifacts/fronts \
-  --outdir outputs/reproduction
-```
-
-Use a new or empty output directory. Inspect `checks.json` and `samples.csv`:
-the expected cleaned train/validation/test counts are 352,896 / 44,246 / 44,141.
-
-| Output | Purpose |
+| Setting | What to supply |
 |---|---|
-| `manifest.json` | Input/code hashes, runtime, and analysis settings |
-| `candidate_scores.csv` | Training agreement, validation scores, and eligibility |
-| `selected_before_test.csv` | Frozen validation choices before test evaluation |
-| `selected.csv` | The same choices with test scores and failure statuses |
-| `curves.csv`, `frontier.pdf` | Strict aggregate; gaps retain failed evaluations |
-| `preprocessing.json`, `sample_ids.csv.gz` | Training-derived preprocessing and sample membership |
-| `samples.csv` | Counts after each join/filter, sorted membership hashes, and ordered ID hashes |
+| `embeddings` | The archived redshift-flow embedding directory with `train/`, `val/`, `test/` parquet shards for run `7655991_0`. |
+| `galspec` | `galSpecExtra-dr8.fits`. |
+| `specgals_home` | Directory containing both `SDSSspecgalsDR8_1.fit.gz` and `SDSSspecgalsDR8_2.fit.gz`. |
+| `conditioning_archive` | Unpacked prepared NORM/fibre input bundle. It includes `conditioning_validation_2026-10-13/`, `fibre_mass_conditioning_2026-10-14/`, `norm_input_ablation_2026-10-16/`, `shared_structure_audit_2026-10-14/` and `plot_cmd_latent_results/vagc_join.parquet`. |
+| `norm_generation` | Optional directory containing `generated_spectra.npz` and `observed_spectra.npz`. Leave `null` to omit the spectral-sequence figure. |
 
-See the [code guide](CODE_GUIDE.md) for how these stages fit together.
+Absolute paths work. Relative input paths resolve beside the JSON file.
+The CMD cache defaults to the file inside the conditioning bundle; an optional
+`cmd_cache` setting overrides it. The bundle's 293 prepared files are checked
+against committed SHA-256 hashes before any outputs are written.
 
-## 4. Produce the paper frontier and anatomy
+**Availability:** exact embeddings, prepared inputs and model products still lack
+public download locations. See [INPUTS.md](INPUTS.md) for input identities and
+[CONDITIONING.md](CONDITIONING.md) for the author archive/export layout.
+Do not substitute different spectrum splits. The command never downloads data.
+
+## 3. Run
 
 ```bash
-uv run --frozen wwdc-figures \
-  --embeddings "$WWDC_EMBEDDINGS" \
-  --galspec "$WWDC_GALSPEC" \
-  --specgals-home "$WWDC_SPECGALS" \
-  --selected outputs/reproduction/selected.csv \
-  --fronts artifacts/fronts \
-  --only frontier seed-frontiers anatomy \
-  --outdir outputs/paper-panels
+python3 reproduce.py
 ```
 
-This subset does not require the CMD cache. For the remaining panels and cache
-recipe, see [FIGURES.md](FIGURES.md) and [INPUTS.md](INPUTS.md).
+Progress prints the current step. The runner automatically:
 
-Paper frontiers mark display fallbacks with hollow triangles. These use the
-highest finite test score among selections at strictly lower budgets for the
-same arm and seed. They do not replace failed selections in the analysis.
-Use `frontier_display_values.csv` to inspect the displayed values and
-`frontier_selected_scores.csv` for the strict aggregate.
+1. Evaluates redshift candidate equations, freezes validation choices and checks numerical references.
+2. Builds redshift figures and the latent-weight table.
+3. Copies and verifies the prepared conditioning bundle in a separate working directory.
+4. Freezes and evaluates NORM selections, rebuilds the ablation and fibre SR tables, and builds the NORM frontier/CMD.
+5. Checks three regenerated tables against bundled references and collects the results.
+6. Replots the NORM spectral sequence if saved arrays were supplied.
 
-## Other reproduction routes
+To check input paths/hashes and see the plan without running analysis:
 
-- **Fresh SR search:** [experiment instructions](../experiments/README.md).
-  `uv run --script --locked experiments/rerun_sr.py` provisions its separate
-  locked pyoperon 0.4.0 environment. Supply `--data-root`, `--arm`, `--seed`,
-  and a new `--outdir` as shown in the experiment instructions.
-  Historical comparison outputs are diagnostic, while
-  `wwdc-reproduce` implements the current selection policy.
-- **Checkpoint to embeddings:** [README instructions](../README.md#generate-embeddings-from-the-checkpoint)
-  and [pinned input layout](INPUTS.md). Only a 32-spectrum inference comparison
-  has been verified during migration, not full-dataset regeneration.
-- **Embedding MLP comparison:** [README instructions](../README.md#reproduce-the-embedding-mlp-comparison).
+```bash
+python3 reproduce.py --check
+```
 
-Full public-input reproduction remains a release task. See
-[VALIDATION.md](VALIDATION.md) for the scope of completed checks.
+To use another path file or run again into a fresh output directory:
+
+```bash
+python3 reproduce.py --config reproduction.json --outdir outputs/paper-run-02
+```
+
+The output directory must be new or empty and separate from the input archives.
+Source inputs are preserved. The working copy needs about 1.16 GB for prepared
+inputs, plus generated outputs. Runtime depends on the host; the workflow includes
+full-data equation evaluation and CMD density calculations.
+
+## Read the result
+
+Open **`outputs/paper/RESULTS.md`**. The output layout is:
+
+```text
+outputs/paper/
+  RESULTS.md       results index and scope
+  summary.json     per-step status, commands and logs
+  figures/         redshift and normalisation PDFs
+  tables/          regenerated tables and labelled archived MLP scores
+  logs/            one log per step
+  work/            frozen selections, sample IDs, arrays and provenance
+```
+
+A successful run passes the redshift numerical reference checks and three
+conditioning-table comparisons. It does not independently validate every figure's
+appearance or every coefficient rounded for the manuscript.
+
+Files prefixed `archived_` contain saved MLP reference scores, not newly trained
+results. The fibre SR report reuses archived conditioned structural summaries.
+The spectral sequence is replotted from saved arrays; fresh checkpoint inference
+is an advanced workflow. Flows, embeddings, symbolic searches and probes/MLPs
+are not retrained by this command.
+
+If a step fails, the command stops, returns a nonzero exit status and prints the
+log path. `summary.json` records the failure. Correct the issue and choose a new
+output directory; partial runs are not silently resumed or overwritten.
+
+## Advanced work
+
+Use [ADVANCED.md](ADVANCED.md) for checkpoint inference and the earlier embedding
+MLP, [CONDITIONING.md](CONDITIONING.md) for Section 6 training/inference and
+individual commands, or [experiments](../experiments/README.md) for fresh symbolic
+searches. The [script guide](SCRIPTS.md) explains every experiment file; it is not
+required reading for the normal workflow.

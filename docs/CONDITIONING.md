@@ -6,7 +6,11 @@ covers its reproduction code and the fibre-mass controls. See the
 [script-by-script guide](SCRIPTS.md) for the purpose, inputs and outputs of every
 retained file.
 
-The entry point is `experiments/conditioning/suite.py`. It runs preserved analysis
+For the combined saved-result workflow, use [QUICKSTART.md](QUICKSTART.md)
+and `python3 reproduce.py`. The commands below are for running individual
+steps, fresh fits and checkpoint inference.
+
+The individual-step entry point is `experiments/conditioning/suite.py`. It runs preserved analysis
 scripts in a separate working copy, with no dependency on the flower checkout or
 its directory location. This is checkpoint-first reproduction: flow training and
 embedding production belong to [wwdc_spectra](https://github.com/Birr0/wwdc_spectra).
@@ -152,7 +156,7 @@ uv run --script --locked experiments/conditioning/suite.py run --workdir /path/t
   norm_conditioning_probe
 ```
 
-This probe uses **only ten latent coordinates** to predict log10 NORM or raw z.
+This probe uses **only ten latent coordinates** to predict log10 NORM.
 Neither conditioning variable is included as a predictor. It reports coordinate
 Pearson/Spearman correlations, OLS and a 64/32 ReLU MLP across seeds 42–44. Each
 MLP uses the saved SR 10,000-row training subset, fits its input/target scaling on

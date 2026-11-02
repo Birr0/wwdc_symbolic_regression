@@ -87,7 +87,7 @@ uncertainty intervals for observed masses.
 | `reference.json` | Expected sample and analysis checks |
 | `recovered_training_scores.json` | Independent native training references and provenance |
 | [`tests/test_selection.py`](../tests/test_selection.py) | Checks selection/test separation and failure handling |
-| [`experiments/`](../experiments/README.md) | Historical search reruns, recovery audit, and exploratory spectrum MLPs |
+| [`experiments/`](../experiments/README.md) | Historical search reruns, recovery audit, and paper conditioning workflows |
 
 The two JSON reference files are packaged under `src/wwdc_repro/`. Historical
 search modules are deliberately hash-pinned: edits to those vendored modules

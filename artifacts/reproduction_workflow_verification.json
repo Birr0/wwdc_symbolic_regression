@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-02",
+  "scope": "Combined saved-equation workflow, including optional NORM sequence replot",
+  "status": "passed",
+  "unit_tests_passed": 23,
+  "prepared_input_files_verified": 293,
+  "completed_steps": 12,
+  "redshift_reference_checks_passed": 15,
+  "conditioning_reference_tables": [
+    {
+      "path": "conditioning_validation_2026-10-13/validation_selected_final.csv",
+      "rows": 374,
+      "agrees": true
+    },
+    {
+      "path": "norm_input_ablation_2026-10-16/summary.csv",
+      "rows": 100,
+      "agrees": true
+    },
+    {
+      "path": "fibre_mass_conditioning_2026-10-14/original_control_comparison/performance.csv",
+      "rows": 100,
+      "agrees": true
+    }
+  ],
+  "collected_figures": [
+    "figures/normalisation/norm_cmd.pdf",
+    "figures/normalisation/norm_frontier.pdf",
+    "figures/normalisation/norm_sequence.pdf",
+    "figures/redshift/cmd_latent_all_gr_seed42.pdf",
+    "figures/redshift/equation_anatomy_by_seed.pdf",
+    "figures/redshift/frontier_lgm_tot_p50.pdf",
+    "figures/redshift/frontier_lgm_tot_p50_by_seed.pdf",
+    "figures/redshift/latent_corner.pdf",
+    "figures/redshift/latent_dim_distributions.pdf",
+    "figures/redshift/score_distribution_marginal.pdf",
+    "figures/redshift/zero_latent.pdf"
+  ],
+  "collected_tables": [
+    "tables/archived_fibre_mlp.csv",
+    "tables/archived_norm_probe_mlp.csv",
+    "tables/fibre_sr.csv",
+    "tables/latent_weights.tex",
+    "tables/norm_ablation.csv"
+  ],
+  "source_sha256": {
+    "reproduce.py": "7bde2f7ea7ad9a0332b48ad6fa39404755d10a3fb799203024086bb34d1b4a34",
+    "reproduction.example.json": "7a79378d4d59acf4255fa43a8ee500f5d6495536d77921f967326d7b778b3d41"
+  },
+  "execution": "Same-host integration using existing locked Python environments directly. The sandbox prevents uv cache writes; uv command prefixes were replaced with the corresponding existing environment executables for this run.",
+  "uv_environment_bootstrap_verified_in_this_run": false,
+  "not_verified": [
+    "Fresh public-input clean-clone reproduction",
+    "Fresh training, inference or symbolic searches",
+    "Cross-platform reproducibility",
+    "Every displayed manuscript coefficient and figure appearance"
+  ]
+}

@@ -1,5 +1,8 @@
 # Documentation
 
+Start with [the reproduction walkthrough](QUICKSTART.md). The pages below are
+technical reference; you do not need to read them to run the normal workflow.
+
 This repository covers the symbolic-regression analysis. Embedding training is
 documented in the upstream [wwdc_spectra](https://github.com/Birr0/wwdc_spectra)
 project; our checkpoint wrapper uses a pinned revision.
@@ -7,6 +10,7 @@ project; our checkpoint wrapper uses a pinned revision.
 | I want to… | Start here |
 |---|---|
 | Reproduce the saved-equation analysis | [Walkthrough](QUICKSTART.md) |
+| Run checkpoint inference or train models/probes | [Advanced reproduction](ADVANCED.md) |
 | Understand the modules and scientific decisions | [Code guide](CODE_GUIDE.md) |
 | Inspect catalogue joins, filtering, and scaling | [Data preparation review](DATA_REVIEW.md) |
 | Inspect equation evaluation and model selection | [Equation/selection review](EQUATION_SELECTION_REVIEW.md) |

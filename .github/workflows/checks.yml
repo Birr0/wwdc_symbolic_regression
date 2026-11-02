@@ -19,6 +19,7 @@ jobs:
         run: uv run --frozen python -m unittest discover -s tests -v
       - name: Check analysis commands
         run: |
+          uv run --frozen python reproduce.py --help
           uv run --frozen wwdc-reproduce --help
           uv run --frozen wwdc-figures --help
           uv run --frozen wwdc-mlp-probe --help

@@ -5,6 +5,14 @@ reproduction project, starting from saved neural representations or the
 specified released checkpoint. It does not claim a complete public-data
 end-to-end reproduction while the exact inputs lack public download locations.
 
+The normal entry point is now `python3 reproduce.py`; see
+[the walkthrough](QUICKSTART.md). Its 12-step saved-result workflow passed on the
+author's inputs, including 15 redshift checks and three conditioning-table
+comparisons. All 23 unit tests pass. This run reused existing locked Python
+environments because the sandbox blocked uv cache writes; fresh environment
+bootstrap and public-input reproduction remain unverified. See the
+[workflow verification record](../artifacts/reproduction_workflow_verification.json).
+
 ## Included
 
 - Package commands for saved-equation analysis, figures, checkpoint inference,

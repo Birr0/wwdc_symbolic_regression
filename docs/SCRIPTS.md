@@ -10,6 +10,11 @@ Start with [QUICKSTART.md](QUICKSTART.md) for the redshift analysis or
 [CONDITIONING.md](CONDITIONING.md) for Section 6. Run commands from the repository
 root. The tables below describe every retained experiment Python file.
 
+The combined workflow is [`reproduce.py`](../reproduce.py). It reads
+[`reproduction.example.json`](../reproduction.example.json), checks the inputs,
+runs the saved-equation stages in order and collects the results. Use it for
+normal reproduction; the individual files below are reference for advanced work.
+
 ## Section 6: the usual starting points
 
 These files are under `experiments/conditioning/scripts/`. Invoke them through
