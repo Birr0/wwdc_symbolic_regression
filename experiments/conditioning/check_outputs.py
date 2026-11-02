@@ -8,7 +8,6 @@ TABLES = (
     'conditioning_validation_2026-10-13/validation_selected_final.csv',
     'norm_input_ablation_2026-10-16/summary.csv',
     'fibre_mass_conditioning_2026-10-14/original_control_comparison/performance.csv',
-    'norm_joint_s_comparison_2026-10-16/comparison.csv',
 )
 
 def main():

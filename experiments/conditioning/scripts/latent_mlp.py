@@ -1,4 +1,4 @@
-"""Broad D4000 latent-only small MLP control: real validation split; untouched test until checkpoint frozen."""
+"""Shared latent-only small MLP training loop: real validation split; untouched test until checkpoint frozen."""
 from pathlib import Path
 import os
 os.environ.setdefault('CUBLAS_WORKSPACE_CONFIG',':4096:8')
@@ -8,9 +8,9 @@ import pandas as pd
 import torch
 from torch import nn
 from sklearn.metrics import r2_score,mean_squared_error
-BASE=Path('d4000_pilot_2026-10-16');OUT=BASE/'mlp'
+BASE=Path('norm_conditioning_probe_2026-10-18');OUT=BASE/'mlp'
 ARMS=('original','zflow','norm');SEEDS=(42,43,44)
-PARAMS=dict(hidden_layers=[64,32],activation='ReLU',optimizer='Adam',learning_rate=.001,batch_size=1024,max_epochs=500,patience=40,selection='minimum MSE on existing full validation split',inputs='ten latent coordinates only; all inputs standardized using the same 10000 training subset per seed',target='Broad D4000; standardized on fitted training subset')
+PARAMS=dict(hidden_layers=[64,32],activation='ReLU',optimizer='Adam',learning_rate=.001,batch_size=1024,max_epochs=500,patience=40,selection='minimum MSE on existing full validation split',inputs='ten latent coordinates only; all inputs standardized using the same 10000 training subset per seed',target='log10(NORM); standardized on fitted training subset')
 
 def digest(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def main():
@@ -60,4 +60,4 @@ def main():
  manifest=dict(parameters=PARAMS,device=str(device),torch_version=torch.__version__,deterministic_algorithms=True,seeds=SEEDS,hashes={str(p):digest(p) for p in [Path(__file__),*[BASE/f'{a}_matrices.npz' for a in ARMS],*[BASE/f'train_indices_seed{s}.npy' for s in SEEDS]]})
  (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2))
  print(summary.to_string(index=False),flush=True)
-if __name__=='__main__':main()
+

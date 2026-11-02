@@ -8,7 +8,8 @@ tests without them; reproducing the paper's numerical results requires them.
 See [release status](docs/RELEASE_STATUS.md) for the current scope and limits.
 
 **Start here:** [reproduction walkthrough](docs/QUICKSTART.md),
-[understand the code](docs/CODE_GUIDE.md), or [documentation index](docs/README.md).
+[understand the code](docs/CODE_GUIDE.md), [script-by-script guide](docs/SCRIPTS.md),
+or [documentation index](docs/README.md).
 The walkthrough assumes access to the exact external inputs; public download
 locations for the model products are still a release task.
 
@@ -207,4 +208,5 @@ Files are under `src/wwdc_repro/`:
 Code, input manifests and reproduction commands for the new analyses are in
 [the conditioning walkthrough](docs/CONDITIONING.md). This includes validation
 selection, NORM ablation, latent probes, conditional generation, CMD figures and
-fibre-mass controls. Large inputs and checkpoints remain external.
+fibre-mass controls. The [script guide](docs/SCRIPTS.md) maps each retained file
+to its paper result or shared dependency. Large inputs and checkpoints remain external.

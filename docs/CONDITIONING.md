@@ -2,8 +2,9 @@
 
 Section 6, "Conditioning on spectral normalisation", is included by the
 pre-submission manuscript from `sections/normalisation.tex`. This walkthrough
-covers its reproduction code, together with the joint-conditioning analysis
-and fibre-mass controls.
+covers its reproduction code and the fibre-mass controls. See the
+[script-by-script guide](SCRIPTS.md) for the purpose, inputs and outputs of every
+retained file.
 
 The entry point is `experiments/conditioning/suite.py`. It runs preserved analysis
 scripts in a separate working copy, with no dependency on the flower checkout or
@@ -58,6 +59,10 @@ replace a staged script that has been edited. Some plotting/report scripts repla
 outputs in the working copy; fits and probe training refuse existing run directories.
 Only load trusted pickle frames and model checkpoints.
 
+The prepared archive retains joint-conditioned inputs required by the historical
+validation audit. The current paper has no standalone joint-conditioning section;
+shared processing of those archived arms is documented in [SCRIPTS.md](SCRIPTS.md).
+
 Small reference tables are committed under `artifacts/conditioning/reference/`.
 Large prepared files are deliberately outside Git. Raw embedding and checkpoint
 identities are recorded in `artifacts/conditioning/raw_inputs.json`; catalogue and
@@ -100,8 +105,6 @@ uv run --script --locked experiments/conditioning/suite.py run --workdir /path/t
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
   plot_norm_cmd_full
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  compare_norm_joint_s
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
   analyse_fibre_original_control
 ```
 
@@ -110,7 +113,6 @@ uv run --script --locked experiments/conditioning/suite.py run --workdir /path/t
 | NORM input-ablation frontier PDF and summary | `norm_input_ablation_2026-10-16/` |
 | Full-sample CMD PDF, bin counts, KDE and metadata | `norm_cmd_full_2026-10-18/` |
 | Per-spectrum latent correction S and photometry | `norm_cmd_s_2026-10-16/plot_data.parquet` |
-| Joint versus NORM correction comparison | `norm_joint_s_comparison_2026-10-16/` |
 | Fibre performance and structure tables | `fibre_mass_conditioning_2026-10-14/original_control_comparison/` |
 | Frozen validation choices and held-out scores | `conditioning_validation_2026-10-13/` |
 
@@ -148,12 +150,10 @@ of S with a mass-to-light ratio.
 ```bash
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
   norm_conditioning_probe
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  redshift_conditioning_probe
 ```
 
-These use **only ten latent coordinates** to predict log10 NORM or raw z.
-Neither conditioning variable is included as a predictor. They report coordinate
+This probe uses **only ten latent coordinates** to predict log10 NORM or raw z.
+Neither conditioning variable is included as a predictor. It reports coordinate
 Pearson/Spearman correlations, OLS and a 64/32 ReLU MLP across seeds 42–44. Each
 MLP uses the saved SR 10,000-row training subset, fits its input/target scaling on
 that subset, and uses Adam at 0.001 with batches of 1024, at most 500 epochs and
@@ -205,9 +205,8 @@ Other rerun entry points:
 - `rerun_conditioning_exports`: reruns both NORM seed-42 fronts and checks exact
   archived equation matches before recovering 60-decimal exports. Move both
   `rerun_norm_cond_seed42` and `rerun_norm_cond+z_seed42` aside first.
-- `run_normflow --append-norm --embed-type cond+z --seed 43` and
-  `run_znormflow --append-norm --embed-type cond+z --seed 43`: regenerate archived
-  candidate pools using raw embeddings/catalogues and the historical runner.
+- `run_normflow --append-norm --embed-type cond+z --seed 43`: regenerate archived
+  NORM candidate pools using raw embeddings/catalogues and the historical runner.
   Move the corresponding `job_results_*` directory first. That runner retains
   historical test-based diagnostic model summaries; **do not use those summaries
   for paper selection**. Follow it with `validate_conditioning` and
@@ -237,9 +236,7 @@ git -C /path/to/wwdc-spectra-generation apply /absolute/path/to/reproduction/art
 ```
 
 This records the observed source used for this reproduction check. It does not
-prove every file was identical when the original checkpoints were trained. The
-newer NORM configurations are separate from the older exploratory
-`experiments/normalisation_flow.py`. Keep training in upstream's framework, with
+prove every file was identical when the original checkpoints were trained. Keep training in upstream's framework, with
 its Hydra configurations and W&B logger; refer to its training/inference entry
 points and the saved checkpoint YAML for resolved settings.
 
@@ -263,9 +260,8 @@ amplitude is imposed explicitly and is not independent evidence that conditionin
 learned a luminosity law. The observed spectrum is included for reference.
 
 The script saves numerical arrays, source spectrum IDs, context values and
-round-trip/step-size checks alongside PDF/PNG figures. `plot_raw_norm_generation
---outdir norm_generation_random_seed42_five` shows raw decoder outputs without
-that final amplitude restoration.
+round-trip/step-size checks alongside PDF/PNG figures. The left panels already
+show the raw decoder outputs; no separate diagnostic renderer is needed.
 
 ## Verification and remaining release work
 
@@ -298,20 +294,7 @@ NORM explicitly; dashed lines omit it. This uses frozen validation selections;
 any nonfinite test score leaves a gap rather than selecting a replacement.
 The manuscript asset is `figures/norm_frontier.pdf`, labelled `fig:norm_frontier`.
 
-## Full-sample Figure 10
-
-```bash
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  plot_joint_cmd_full
-```
-
-Outputs are in `joint_cmd_full/`: PDF/400-dpi PNG, plotting rows, bin arrays,
-KDE contours and an input-hash manifest. All three splits contribute to the
-descriptive CMD; equations remain the frozen budget-15 validation selections.
-Each seed row shows the same full-sample count/KDE panel, then NORM and joint
-NORM+z mean corrections. The minimum count of 25, bin edges, KDE seed/sample,
-contour probabilities and S colour range match the full-sample NORM CMD.
-The existing test-only comparison and its reported correlations are preserved.
+## Historical generation-array compatibility
 
 The default generation figure uses raw decoder outputs as of 2026-10-20.
 Saved arrays use schema 2: `amplitude_restored = decoded_raw * reference_norm * factor`.

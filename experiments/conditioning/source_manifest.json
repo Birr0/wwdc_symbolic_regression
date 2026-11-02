@@ -33,16 +33,12 @@
       "adapted": false
     },
     {
-      "file": "compare_norm_joint_s.py",
-      "source_sha256": "be3578dc50bac293999dd4e15273c41bf01d2e597fc032b1b9736200ff7d1821",
-      "packaged_sha256": "df1dbd7f98dce0db4013e466ff03e6147aa998e72dd3e19391fd644136a816da",
-      "adapted": true
-    },
-    {
-      "file": "d4000_mlp.py",
+      "file": "latent_mlp.py",
       "source_sha256": "4bf65f166fb9f0326824e65ce14eded5344d792ac2d9ffbeadf989952c016e84",
-      "packaged_sha256": "4bf65f166fb9f0326824e65ce14eded5344d792ac2d9ffbeadf989952c016e84",
-      "adapted": false
+      "packaged_sha256": "877b0e199459e609954f115e34b15c181f4a403bfae677aea6b59109d8fc874b",
+      "adapted": true,
+      "source_file": "d4000_mlp.py",
+      "adaptation": "Renamed shared NORM probe training helper; removed unused D4000 entry point and defaults"
     },
     {
       "file": "fibre_mass_conditioning.py",
@@ -53,8 +49,9 @@
     {
       "file": "fibre_mass_mlp_control.py",
       "source_sha256": "ed73213e29e167f2ea15925752beffe015f11db9752e64ece02d13cac2b4bc5d",
-      "packaged_sha256": "ed73213e29e167f2ea15925752beffe015f11db9752e64ece02d13cac2b4bc5d",
-      "adapted": false
+      "packaged_sha256": "ebb8fc5e211360bd487e6a768e6771c1fa6885ebeb0715886a6c474c5c1fd98a",
+      "adapted": true,
+      "scope_update": "Train only the representation arms reported in the current manuscript; architecture, seeds and training procedure unchanged"
     },
     {
       "file": "fibre_mass_original_control.py",
@@ -88,16 +85,11 @@
       "adapted": false
     },
     {
-      "file": "measure_shared_structure.py",
-      "source_sha256": "b3bbfde5dbbfc9aaf88deddf7f969dba6008c7eaf1d2826d799afccf161534b1",
-      "packaged_sha256": "b3bbfde5dbbfc9aaf88deddf7f969dba6008c7eaf1d2826d799afccf161534b1",
-      "adapted": false
-    },
-    {
       "file": "norm_conditioning_probe.py",
       "source_sha256": "c045900ec0f885d0742867f4ff2e9ed5823b05f53f7e8600a0a933c5a1169197",
-      "packaged_sha256": "c045900ec0f885d0742867f4ff2e9ed5823b05f53f7e8600a0a933c5a1169197",
-      "adapted": false
+      "packaged_sha256": "9df6d511b3557370bd7ee1705cf4f50470484cce58bbae96341d6f9f9acec67e",
+      "adapted": true,
+      "scope_update": "Train only the representation arms reported in the current manuscript; architecture, seeds and training procedure unchanged"
     },
     {
       "file": "norm_input_ablation.py",
@@ -118,21 +110,9 @@
       "adapted": true
     },
     {
-      "file": "plot_raw_norm_generation.py",
-      "source_sha256": "981eab2ed041c5d543dd5aac29019e3476fd7d7c230de941c8b2c5ec8eeece87",
-      "packaged_sha256": "60f2bf1038b31cb35664990053f4277e21289ff11f61707909c1f80cca1311fb",
-      "adapted": true
-    },
-    {
       "file": "processing_fun.py",
       "source_sha256": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562",
       "packaged_sha256": "7a00ac4012d309c170a6a408976227a83ebbb31afb20f6716b4bec9dabf73562",
-      "adapted": false
-    },
-    {
-      "file": "redshift_conditioning_probe.py",
-      "source_sha256": "e981e11f23daa5ea07aa204c1f2baa7384810052d58b9462ab524c46841d272f",
-      "packaged_sha256": "e981e11f23daa5ea07aa204c1f2baa7384810052d58b9462ab524c46841d272f",
       "adapted": false
     },
     {
@@ -151,12 +131,6 @@
       "file": "run_total_mass.py",
       "source_sha256": "d2ffc8e7d67b35880adb1b7c979c73cb8c530604c06710e9b7eb2a11cd21794c",
       "packaged_sha256": "823c6a52173a7e7a128f9a4d0e9be9c57a796299cb597a3de89d2f2e6de47616",
-      "adapted": true
-    },
-    {
-      "file": "run_znormflow.py",
-      "source_sha256": "d04107b41c89cae0cd92726aa6b36683ffd074308264ccdfb7f3fec844c906cb",
-      "packaged_sha256": "a59e69eb8a50e552066be48026acf41679bdbd5eeab37defe3d4c0e1c5276a08",
       "adapted": true
     },
     {
@@ -191,16 +165,11 @@
       "adapted": false
     },
     {
-      "file": "plot_joint_cmd_full.py",
-      "packaged_sha256": "e8ea81eae7462c33f00b32e779b6a46d0b47db6affdef75a44683a1f046f3b77",
-      "origin": "Full-sample Figure 10, frozen selections and paper CMD filters",
-      "adapted": false
-    },
-    {
       "file": "preview_raw_norm_sequence.py",
       "packaged_sha256": "ad21396c5c620e0e1db82c89d88c34c7e89dbe3c133e155ff4e568ff97cebb02",
       "origin": "Replot saved decoder outputs without post-decoder median division",
       "adapted": false
     }
-  ]
+  ],
+  "scope_update": "Retain current manuscript Section 6, fibre appendix and their shared dependencies; omitted standalone exploratory and joint-only scripts. Original source hashes remain historical provenance."
 }

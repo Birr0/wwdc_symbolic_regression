@@ -12,6 +12,7 @@ project; our checkpoint wrapper uses a pinned revision.
 | Inspect equation evaluation and model selection | [Equation/selection review](EQUATION_SELECTION_REVIEW.md) |
 | Obtain and verify the inputs | [Inputs](INPUTS.md) |
 | Recreate or inspect a plot | [Figure calculations](FIGURES.md) |
+| Find the purpose of every experiment script | [Script guide](SCRIPTS.md) |
 | Reproduce Section 6 (spectral normalisation) and fibre controls | [Conditioning walkthrough](CONDITIONING.md) |
 | Rerun a symbolic search or inspect MLP experiments | [Experiments](../experiments/README.md) |
 | Understand validation selection and test failures | [Selection audit](SELECTION_AUDIT.md) |

@@ -40,6 +40,28 @@ import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
+WORKFLOWS = {
+    'validate_conditioning': 'Prepare candidate audits and matrices from raw inputs',
+    'rerun_conditioning_exports': 'Recover high-precision NORM equation exports',
+    'finalize_conditioning_validation': 'Freeze validation choices and score held-out equations',
+    'matched_conditioning_controls': 'Prepare or fit matched original/z-flow SR controls',
+    'norm_input_ablation': 'Section 6: explicit-NORM ablation fits and table',
+    'run_normflow': 'Section 6: regenerate NORM-conditioned candidate fronts',
+    'check_conditioning_physics': 'Recover NORM scaling and physical-reference diagnostics',
+    'norm_conditioning_probe': 'Section 6: latent-only NORM probe table',
+    'generate_norm_sequence': 'Section 6: counterfactual spectral sequence',
+    'preview_raw_norm_sequence': 'Replot the spectral sequence from saved arrays',
+    'plot_norm_frontier': 'Section 6: four-arm SR frontier figure',
+    'plot_cmd_norm_s': 'Section 6: prepare and check additive S and CMD rows',
+    'plot_norm_cmd_full': 'Section 6: full-sample CMD figure',
+    'analyse_matched_conditioning': 'Analyse selected total-mass equation structure',
+    'fibre_mass_conditioning': 'Appendix: prepare or fit conditioned fibre-mass SR',
+    'fibre_mass_original_control': 'Appendix: prepare or fit original-latent fibre-mass SR',
+    'fibre_mass_mlp_control': 'Appendix: train matched fibre-mass MLPs',
+    'analyse_fibre_mass': 'Appendix: reconstruct conditioned fibre-mass diagnostics',
+    'analyse_fibre_original_control': 'Appendix: performance table and equation structure',
+    'audit_shared_structure': 'Check additive versus nonlinear latent contributions',
+}
 ROOTS = ('conditioning_validation_2026-10-13', 'fibre_mass_conditioning_2026-10-14',
          'norm_input_ablation_2026-10-16', 'shared_structure_audit_2026-10-14')
 SUFFIXES = {'.csv', '.json', '.npz', '.npy', '.pkl', '.parquet', '.tex', '.md'}
@@ -103,12 +125,13 @@ def main():
     p.add_argument('--workdir', type=Path, required=True)
     p.add_argument('--data-root', type=Path)
     p.add_argument('--upstream', type=Path, help='wwdc_spectra checkout, for conditional generation')
-    p.add_argument('script', choices=sorted(p.stem for p in (HERE/'scripts').glob('*.py')))
+    p.add_argument('script', choices=sorted(WORKFLOWS))
     p.add_argument('arguments', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     check_code()
     if args.command == 'list':
-        print('\n'.join(p.stem for p in sorted((HERE/'scripts').glob('*.py'))))
+        for name, description in WORKFLOWS.items():
+            print(f'{name:38} {description}')
     elif args.command == 'export':
         export(args.source, args.workdir)
     elif args.command == 'verify':

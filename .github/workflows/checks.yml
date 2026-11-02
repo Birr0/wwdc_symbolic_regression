@@ -24,5 +24,7 @@ jobs:
           uv run --frozen wwdc-mlp-probe --help
       - name: Check separate locked search environment
         run: uv run --script --locked experiments/rerun_sr.py --help
+      - name: Verify conditioning source hashes and list paper workflows
+        run: uv run --frozen python experiments/conditioning/suite.py list
       - name: Build distribution
         run: uv build

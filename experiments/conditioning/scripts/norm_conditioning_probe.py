@@ -7,13 +7,13 @@ import pandas as pd
 from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
-import d4000_mlp as mlp
+import latent_mlp as mlp
 from matched_conditioning_controls import digest
 
 OUT=Path('norm_conditioning_probe_2026-10-18')
 BASE=Path('conditioning_validation_2026-10-13')
 MATCH=BASE/'matched_controls'
-ARMS=('original','zflow','norm','znorm')
+ARMS=('original','zflow','norm')
 
 def main():
  OUT.mkdir(exist_ok=False)
@@ -67,7 +67,7 @@ def report():
  for arm in ARMS:
   c=corr[corr.arm==arm];r=m[m.arm==arm].iloc[0];l=lin[lin.arm==arm]
   lines.append(f'| {arm} | {c.pearson.abs().max():.4f} | {c.spearman.abs().max():.4f} | {l.test_r2.mean():.4f} | {r.test_r2:.4f} | {r.test_r2_min:.4f}–{r.test_r2_max:.4f} | {r.test_rmse:.5f} |')
- lines+=['','These are predictive probes on the filtered total-mass sample, not proofs of independence or estimates of all recoverable information. A weak coordinate correlation does not rule out nonlinear prediction. NORM conditioning aims to reduce dependence on NORM, but finite probe performance cannot prove full statistical independence. Seed variation includes training subset and model initialization, not independent flow training. Raw R² may be negative when worse than the test-mean reference.','','Epoch-cap counts: '+str(dict(zip(m.arm,m.capped_runs)))+'. All saved MLP predictions and validation checkpoint epochs verified.','','Reproduce: `../../../.venv/bin/python norm_conditioning_probe.py`. Preparation refuses overwrite. Training loop reused from `d4000_mlp.py`.']
+ lines+=['','These are predictive probes on the filtered total-mass sample, not proofs of independence or estimates of all recoverable information. A weak coordinate correlation does not rule out nonlinear prediction. NORM conditioning aims to reduce dependence on NORM, but finite probe performance cannot prove full statistical independence. Seed variation includes training subset and model initialization, not independent flow training. Raw R² may be negative when worse than the test-mean reference.','','Epoch-cap counts: '+str(dict(zip(m.arm,m.capped_runs)))+'. All saved MLP predictions and validation checkpoint epochs verified.','','Reproduce: `../../../.venv/bin/python norm_conditioning_probe.py`. Preparation refuses overwrite. Training loop reused from `latent_mlp.py`.']
  (OUT/'REPORT.md').write_text('\n'.join(lines)+'\n')
  print('\n'.join(lines),flush=True)
 

@@ -1,18 +1,24 @@
-# NORM conditioning and fibre-mass experiments
+# Paper NORM and fibre-mass experiments
 
-This suite packages the analysis behind the new NORM subsection, joint-conditioning
-comparison and fibre-mass appendix. Start with [the walkthrough](../../docs/CONDITIONING.md).
-The scripts preserve the existing calculations and dated artifact names; `suite.py`
-provides a portable working directory and explicit data/upstream paths.
+Start with the [script-by-script guide](../../docs/SCRIPTS.md): it maps every
+retained file to a paper result or a required helper, with inputs and outputs.
+The [walkthrough](../../docs/CONDITIONING.md) gives copyable reproduction commands.
 
-- `scripts/`: scoring, search, probes, structural diagnostics and figure generation.
-- `source_manifest.json`: original and packaged source SHA-256 hashes, identifying adaptations.
-- `suite.py.lock`: resolved experiment environment; use `uv run --script --locked suite.py`.
+```bash
+uv run --script --locked experiments/conditioning/suite.py list
+```
+
+The launcher lists runnable paper workflows with descriptions. Shared helpers
+are staged automatically and are not offered as commands. Source hashes are
+checked before running; work happens in a separate exported input directory.
+
+- `scripts/`: Section 6, fibre appendix and their shared dependencies.
+- `source_manifest.json`: historical source hashes and current packaged hashes.
+- `suite.py.lock`: separate locked experiment environment.
 - `environment.json`: observed original direct dependency versions.
-- `../../artifacts/conditioning/`: reference tables, external-input manifests and upstream patch.
+- `../../artifacts/conditioning/`: reference tables, input manifests and upstream patch.
 
-`python experiments/conditioning/suite.py list` needs only Python's standard library.
-Do not execute every listed module: some are shared helpers. Use the workflow in
-the walkthrough. Full-size matrices, photometry, embeddings and checkpoints are
-external inputs. This addition does not change the earlier redshift-only pipeline
-or the separate exploratory `normalisation_flow.py` training implementation.
+Large inputs and checkpoints remain external. Historical prepared archives and
+shared validation routines retain extra arms to preserve the original frozen
+selection audit. Standalone joint-only figures/searches and exploratory code
+have been removed; see Git history for their earlier versions.

@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from sklearn.metrics import r2_score,mean_squared_error
 BASE=Path('fibre_mass_conditioning_2026-10-14');OUT=BASE/'mlp_control_2026-10-15'
-ARMS=('original','zflow','norm','znorm');SEEDS=(42,43,44)
+ARMS=('original','norm');SEEDS=(42,43,44)
 PARAMS=dict(hidden_layers=[64,32],activation='ReLU',optimizer='Adam',learning_rate=.001,batch_size=1024,max_epochs=500,patience=40,selection='minimum MSE on existing full validation split',inputs='ten latent coordinates + NORM + z; all inputs standardized using the same 10000 training subset per seed',target='LGM_FIB_P50; standardized on fitted training subset')
 
 def digest(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()

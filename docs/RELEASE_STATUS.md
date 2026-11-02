@@ -14,7 +14,7 @@ end-to-end reproduction while the exact inputs lack public download locations.
 - A walkthrough, code guide, figure recipes, and data/selection reviews.
 - Data, equation, and selection tests, with a GitHub Actions workflow for
   installation, command checks, tests, and package building.
-- Section 6 spectral-normalisation analysis, joint-conditioning and fibre-mass
+- Section 6 spectral-normalisation analysis and fibre-mass
   controls: preserved scripts, a locked experiment launcher, reference tables,
   input manifests and an upstream source patch. See [CONDITIONING.md](CONDITIONING.md).
   The local package passes 17 unit tests; source hashes also pass the launcher's
@@ -40,9 +40,6 @@ and wheel/source builds. Evidence is in [VALIDATION.md](VALIDATION.md).
   retains failed test evaluations without replacement.
 - Expression evaluation preserves historical SymPy simplification and exported
   coefficient precision. It does not replay native Operon tree arithmetic.
-- Experimental spectrum-MLP/outlier scripts are exploratory. In particular,
-  `experiments/investigate_mlp_outliers.py` retains local dataset/upstream defaults
-  and is not part of the standalone paper reproduction route.
 
 ## Repository and licence
 
