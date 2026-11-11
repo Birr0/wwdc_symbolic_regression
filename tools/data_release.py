@@ -1,7 +1,7 @@
 """Shared manifest and configuration helpers for the paper's HF data release."""
 
-import hashlib
 import json
+import sys
 from pathlib import Path
 import shutil
 
@@ -10,14 +10,10 @@ PROFILES = {
     "full": {"analysis", "conditioning", "generation", "models", "spectra", "pretrained"},
 }
 REDSHIFT = "sdss_II/spender_I_flow_v2/spender_I_flow_v2"
+# Support direct execution without installing the package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from wwdc_repro.shared.utils import sha256 as digest
 
-
-def digest(path):
-    h = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            h.update(block)
-    return h.hexdigest()
 
 
 def safe_relative(value):

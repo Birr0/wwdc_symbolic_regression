@@ -14,7 +14,7 @@ import pandas as pd
 
 REPRO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPRO / "src"))
-from wwdc_repro.frontier import ARMS, SEEDS, front_path
+from wwdc_repro.redshift.frontier import ARMS, SEEDS, front_path
 
 
 def main():
@@ -47,7 +47,7 @@ def main():
                     "native_train_r2": native if np.isfinite(native) else None})
     result = {"description": "Native training-only scores recovered from exact seeded reruns; no test metrics used for eligibility.",
               "candidates": candidates, "verified_runs": runs}
-    output = REPRO / "src/wwdc_repro/recovered_training_scores.json"
+    output = REPRO / "src/wwdc_repro/resources/recovered_training_scores.json"
     output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(f"Recovered {len(candidates)} references from {len(runs)} verified runs: {output}")
 

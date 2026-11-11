@@ -75,17 +75,17 @@
     "bytes": 11816
   },
   {
-    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed42/pareto_fronts.csv",
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig+z_seed42/pareto_fronts.csv",
     "sha256": "07ecbc17f73f2c768ac198a080217778ae90ed3d527ccd15a4b9ef51bbc0150b",
     "bytes": 10887
   },
   {
-    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed43/pareto_fronts.csv",
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig+z_seed43/pareto_fronts.csv",
     "sha256": "ecc4aa2f00981460a9e0fb2a19f3acf6331b14ff4a27ec9af05d881d98b9d5b1",
     "bytes": 11924
   },
   {
-    "file": "artifacts/fronts/job_results_origz_lgm_tot_p50_cond+z_seed44/pareto_fronts.csv",
+    "file": "artifacts/fronts/job_results_lgm_tot_p50_orig+z_seed44/pareto_fronts.csv",
     "sha256": "458038f228721ce56e7f3dbe2ad3d6fb01fa9d01647022546f682d864f0f8a90",
     "bytes": 11135
   }

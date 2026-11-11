@@ -1,8 +1,8 @@
 """Numerical contract for the exported-expression evaluator."""
 import unittest
 import numpy as np
-from wwdc_repro.equations import evaluate, ExpressionError, EvaluationInputError
-from wwdc_repro.frontier import score_expression_details
+from wwdc_repro.shared.equations import evaluate, ExpressionError, EvaluationInputError
+from wwdc_repro.redshift.frontier import score_expression_details
 
 
 class EquationTests(unittest.TestCase):

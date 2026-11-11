@@ -15,6 +15,7 @@ dependencies = [
   "scienceplots>=2.2.2",
   "scikit-learn>=1.4",
   "scipy>=1.12",
+  "seaborn>=0.13.2",
   "sympy>=1.12",
 ]
 
@@ -27,12 +28,12 @@ inference = [
 ]
 
 [project.scripts]
-wwdc-reproduce = "wwdc_repro.cli:main"
-wwdc-figures = "wwdc_repro.figures:main"
-wwdc-embed = "wwdc_repro.embedding:main"
-wwdc-cmd-cache = "wwdc_repro.catalogue:main"
-wwdc-download-catalogues = "wwdc_repro.catalogue:download"
-wwdc-mlp-probe = "wwdc_repro.mlp_probe:main"
+wwdc-reproduce = "wwdc_repro.redshift.cli:main"
+wwdc-figures = "wwdc_repro.redshift.figures:main"
+wwdc-embed = "wwdc_repro.shared.embedding:main"
+wwdc-cmd-cache = "wwdc_repro.shared.catalogue:main"
+wwdc-download-catalogues = "wwdc_repro.shared.catalogue:download"
+wwdc-mlp-probe = "wwdc_repro.redshift.mlp_probe:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
-from wwdc_repro.data import (
+from wwdc_repro.shared.data import (
     clean_target, latent_array, load_sample, matrices, sample_summary,
     spectrum_ids, validate_split_ids,
 )
@@ -35,7 +35,7 @@ class DataTests(unittest.TestCase):
                 spectrum_ids(pd.Series([invalid]), "fixture")
 
     def test_missing_catalogue_never_invokes_downloader(self):
-        with tempfile.TemporaryDirectory() as directory, patch("wwdc_repro.data.fetch_sdss_specgals") as fetch:
+        with tempfile.TemporaryDirectory() as directory, patch("wwdc_repro.shared.data.fetch_sdss_specgals") as fetch:
             root = Path(directory)
             with self.assertRaisesRegex(FileNotFoundError, "Missing local catalogue"):
                 load_sample(root, root / "missing.fits", root)
@@ -51,6 +51,39 @@ class DataTests(unittest.TestCase):
         np.testing.assert_array_equal(changed["X_train"], baseline["X_train"])
         for split in data:
             np.testing.assert_array_equal(changed[f"X_{split}"][:, -1], data[split].z_x)
+
+    def test_norm_is_scaled_with_training_latents_before_raw_redshift(self):
+        data = frames()
+        for split, values in zip(data, ([10., 14.], [18., 22.], [26., 30.])):
+            data[split]["norm"] = values
+        original = {split: np.stack(frame.cond) for split, frame in data.items()}
+        baseline = matrices(data, "cond+z")
+        result = matrices(data, "cond+z", scaled_columns=("norm",))
+        for split, expected in zip(data, ([-1., 1.], [3., 5.], [7., 9.])):
+            self.assertEqual(result[f"X_{split}"].shape, (2, 12))
+            np.testing.assert_array_equal(result[f"X_{split}"][:, :10], baseline[f"X_{split}"][:, :10])
+            np.testing.assert_array_equal(result[f"X_{split}"][:, 10], expected)
+            np.testing.assert_array_equal(result[f"X_{split}"][:, 11], data[split].z_x)
+            np.testing.assert_array_equal(np.stack(data[split].cond), original[split])
+        data["val"]["norm"] = [1e6, -1e6]
+        changed = matrices(data, "cond+z", scaled_columns=("norm",))
+        np.testing.assert_array_equal(changed["X_train"], result["X_train"])
+        without_z = matrices(data, "cond", scaled_columns=("norm",))
+        np.testing.assert_array_equal(without_z["X_train"], result["X_train"][:, :-1])
+
+    def test_extra_scaled_inputs_are_explicit_finite_scalars(self):
+        data = frames()
+        for frame in data.values():
+            frame["norm"] = [10., 14.]
+        for columns in ("norm", ("norm", "norm"), ("missing",)):
+            with self.subTest(columns=columns), self.assertRaises(ValueError):
+                matrices(data, "cond", scaled_columns=columns)
+        with self.assertRaisesRegex(ValueError, "redshift-only"):
+            matrices(data, "z", scaled_columns=("norm",))
+        for invalid in ([np.nan, 1.], [[1., 2.], [3., 4.]]):
+            data["val"]["norm"] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                matrices(data, "cond", scaled_columns=("norm",))
 
     def test_cleaning_preserves_missing_sentinel_rule_but_rejects_infinity(self):
         data = frames()

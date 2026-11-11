@@ -1,4 +1,7 @@
-# Training/validation-only selection audit
+# Historical validation-selection audit
+
+These numbers describe the previous validation-selected run. Training selection
+is now the default; use `--selection validation` to reproduce this policy.
 
 - Candidates: 387; eligible: 365.
 - Changed eligibility: 5 candidates.

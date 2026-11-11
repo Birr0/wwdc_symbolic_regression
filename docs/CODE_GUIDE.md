@@ -38,12 +38,12 @@ flowchart TD
 
 ## Read the main workflow in this order
 
-1. [`cli.py`](../src/wwdc_repro/cli.py), `run`: orchestrates the analysis,
+1. [`cli.py`](../src/wwdc_repro/redshift/cli.py), `run`: orchestrates the analysis,
    saves frozen selections before test evaluation, and writes manifests/checks.
-2. [`data.py`](../src/wwdc_repro/data.py), `load_sample`, `clean_target`, and
+2. [`data.py`](../src/wwdc_repro/shared/data.py), `load_sample`, `clean_target`, and
    `matrices`: joins catalogues by spectrum ID, filters rows, and builds features.
    The split is by spectrum; physical galaxies are not guaranteed disjoint.
-3. [`frontier.py`](../src/wwdc_repro/frontier.py), `score_fronts`: evaluates
+3. [`frontier.py`](../src/wwdc_repro/redshift/frontier.py), `score_fronts`: evaluates
    printed candidates on the training subsample and validation set. Independent
    training references, including hash-bound recovered scores, check that an
    exported expression reproduces its training score within the tolerance.
@@ -51,7 +51,7 @@ flowchart TD
    R² for each arm/seed/maximum length, preferring shorter equations on a tie.
 5. `evaluate_selected` and `curves`: evaluate frozen choices on test and retain
    failures. An aggregate with a failed seed has no finite mean/range.
-6. [`equations.py`](../src/wwdc_repro/equations.py): parses exported expressions
+6. [`equations.py`](../src/wwdc_repro/shared/equations.py): parses exported expressions
    and supplies their numerical evaluation.
 
 The prediction object is the exported equation, not the original Operon tree.
@@ -64,13 +64,13 @@ current choices and documents the evaluator's simplification and failure rules.
 
 ## Figures
 
-[`figures.py`](../src/wwdc_repro/figures.py) provides `wwdc-figures` and routes
+[`figures.py`](../src/wwdc_repro/redshift/figures.py) provides `wwdc-figures` and routes
 each panel to its calculation. `frontier_display` implements the explicitly
 test-informed display fallback used in the manuscript; it does not alter
-selection records. [`paper_panels.py`](../src/wwdc_repro/paper_panels.py) contains
+selection records. [`paper_panels.py`](../src/wwdc_repro/redshift/paper_panels.py) contains
 `anatomy`, `zero_latent`, and `cmd`. The corner plot is in
-[`latent_corner.py`](../src/wwdc_repro/latent_corner.py), and the coefficient
-table is in [`weights.py`](../src/wwdc_repro/weights.py).
+[`latent_corner.py`](../src/wwdc_repro/redshift/latent_corner.py), and the coefficient
+table is in [`weights.py`](../src/wwdc_repro/redshift/weights.py).
 
 Use [FIGURES.md](FIGURES.md) for exact panel inputs, score definitions, bins,
 and numerical outputs. In particular, fixed-score anatomy curves are not
@@ -80,9 +80,9 @@ uncertainty intervals for observed masses.
 
 | Location | Responsibility |
 |---|---|
-| [`catalogue.py`](../src/wwdc_repro/catalogue.py) | Downloads pinned CMD mirror inputs and builds the historical join |
-| [`embedding.py`](../src/wwdc_repro/embedding.py) | Runs checkpoint inference through the pinned upstream implementation |
-| [`mlp_probe.py`](../src/wwdc_repro/mlp_probe.py) | Reproduces the matched embedding MLP comparison |
+| [`catalogue.py`](../src/wwdc_repro/shared/catalogue.py) | Downloads pinned CMD mirror inputs and builds the historical join |
+| [`embedding.py`](../src/wwdc_repro/shared/embedding.py) | Runs checkpoint inference through the pinned upstream implementation |
+| [`mlp_probe.py`](../src/wwdc_repro/redshift/mlp_probe.py) | Reproduces the matched embedding MLP comparison |
 | `artifacts/fronts/` | Archived candidate equations; inputs to the main workflow |
 | `reference.json` | Expected sample and analysis checks |
 | `recovered_training_scores.json` | Independent native training references and provenance |

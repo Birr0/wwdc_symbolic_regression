@@ -15,12 +15,12 @@ and numerical evaluation errors.
 
 ## Read the code in this order
 
-1. [`equations.evaluate`](../src/wwdc_repro/equations.py) constructs `X1` through
+1. [`equations.evaluate`](../src/wwdc_repro/shared/equations.py) constructs `X1` through
    `Xn`, parses the saved expression using SymPy, and converts it to a NumPy
    function. `^` becomes `**`; supported explicit names include `exp`, `log`,
    `abs`, and `Abs`. Scalar constant predictions are broadcast across rows.
    Evaluation uses the `Equation` column, not the higher-precision `Equation_p12`.
-2. [`frontier.score_expression`](../src/wwdc_repro/frontier.py) returns R² when
+2. [`frontier.score_expression`](../src/wwdc_repro/redshift/frontier.py) returns R² when
    all predictions are finite. Nonfinite predictions and the listed exceptions
    produce NaN. One invalid row invalidates that whole candidate evaluation;
    the function does not drop rows to improve the score.

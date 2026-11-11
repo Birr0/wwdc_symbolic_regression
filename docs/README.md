@@ -9,6 +9,7 @@ project; our checkpoint wrapper uses a pinned revision.
 
 | I want to… | Start here |
 |---|---|
+| Review every paper figure and table | [Paper review inventory](PAPER_REVIEW.md) |
 | Reproduce the saved-equation analysis | [Walkthrough](QUICKSTART.md) |
 | Run checkpoint inference or train models/probes | [Advanced reproduction](ADVANCED.md) |
 | Understand the modules and scientific decisions | [Code guide](CODE_GUIDE.md) |

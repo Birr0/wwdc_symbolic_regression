@@ -39,8 +39,9 @@ for name, expected in HISTORICAL_SHA256.items():
     if hashlib.sha256((HISTORICAL / name).read_bytes()).hexdigest() != expected:
         raise RuntimeError(f"{HISTORICAL / name} differs from the historical search code")
 sys.path[:0] = [str(REPRO / "src"), str(HISTORICAL)]
-from wwdc_repro.data import load_sample, clean_target, matrices, sample_summary, TARGET
-from wwdc_repro.frontier import front_path, score_expression
+from wwdc_repro.shared.utils import sha256 as file_hash
+from wwdc_repro.shared.data import load_sample, clean_target, matrices, sample_summary, TARGET
+from wwdc_repro.redshift.frontier import front_path, score_expression
 from utils import fit_sym_fn
 
 
@@ -80,12 +81,6 @@ def main():
         "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "script_lock_sha256": hashlib.sha256(Path(__file__).with_suffix(".py.lock").read_bytes()).hexdigest(),
     }
-    def file_hash(path):
-        digest = hashlib.sha256()
-        with path.open("rb") as stream:
-            for block in iter(lambda: stream.read(1024 * 1024), b""):
-                digest.update(block)
-        return digest.hexdigest()
     manifest["inputs"] = [{"path": str(path.resolve()), "bytes": path.stat().st_size,
                            "sha256": file_hash(path)} for path in input_files]
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
@@ -93,7 +88,7 @@ def main():
     frames = clean_target(load_sample(
         embeddings,
         args.data_root / "galSpecExtra-dr8.fits", args.data_root / "sdss"))
-    reference = json.loads((REPRO / "src/wwdc_repro/reference.json").read_text())
+    reference = json.loads((REPRO / "src/wwdc_repro/resources/reference.json").read_text())
     for row in sample_summary(frames):
         for key in ("rows", "id_sha256", "ordered_id_sha256"):
             assert row[key] == reference["samples"][row["split"]][key]

@@ -1,7 +1,7 @@
 # Data preparation review
 
 Reviewed 2026-10-12 against the local archived inputs. The initial review left
-[`data.py`](../src/wwdc_repro/data.py) unchanged; the follow-up below added explicit
+[`data.py`](../src/wwdc_repro/shared/data.py) unchanged; the follow-up below added explicit
 validation and audit metadata. [Initial results](../artifacts/data_review.json)
 and [before/after verification](../artifacts/data_validation_verification.json)
 record the source hashes for each stage.
@@ -104,3 +104,31 @@ Six new data tests cover ID precision, missing inputs, training-only scaling,
 nonfinite values, dimensions, row order and split overlap; the three selection
 tests continue to pass. A split-membership check still concerns spectrum IDs,
 not physical-galaxy identity.
+
+
+## Why NORM and historical redshift sample memberships differ
+
+Traced the 41 training, six validation and six test spectra present in the
+cleaned redshift sample but absent from NORM/joint conditioning. All 53 have
+negative spectral normalisation in the original checkpoint-referenced caches.
+They are already absent from the raw NORM/joint embedding exports, before the
+reproduction catalogue joins and sample cuts.
+
+The upstream `wwdc_spectra.data.normalisation.configure_normalisation` retains
+only finite positive NORM values before taking log10. For every split, the raw
+NORM and joint embedding ID sets exactly equal the parent dataset IDs passing
+this cached positivity/finite filter. The historical redshift embedding ID set
+exactly equals the unfiltered parent set. Thus this filter fully accounts for
+the membership differences; no additional removal of mislabelled IDs is needed
+to explain them. This is not an independent validation of spectrum/metadata
+pairing and does not establish why individual normalisations are negative.
+
+The six missing test IDs are 337843946807912448, 338906349901473792,
+461737465674229760, 461759730784692224, 463894988757952512 and
+463943917025388544. Their cached normalisations range from -0.249389 to
+-0.051431. The larger raw exclusions are 10,739 train, 1,317 validation and
+1,330 test rows; most also fail the subsequent redshift-analysis sample cuts.
+
+Evidence: `outputs/conditioning-sample-difference/differing_spectra.csv`,
+`verification.json` and `verify_membership.py`. No sample membership or
+selection policy was changed during this investigation.

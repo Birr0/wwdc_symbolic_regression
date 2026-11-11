@@ -58,8 +58,8 @@ uv run --script --locked experiments/conditioning/suite.py verify \
 Export copies files; it never links writable results back to the originals. Verify
 before running analyses: regenerated summaries/manifests may intentionally change,
 so verification against the initial archive can fail afterwards. Keep the source
-archive unchanged. The launcher checks packaged source hashes and refuses to
-replace a staged script that has been edited. Some plotting/report scripts replace
+archive unchanged. The launcher runs the installed/shared package directly; it does not copy source
+files into output directories. Some plotting/report scripts replace
 outputs in the working copy; fits and probe training refuse existing run directories.
 Only load trusted pickle frames and model checkpoints.
 
@@ -101,15 +101,13 @@ can be anywhere; relative artifact names are resolved inside that directory.
 
 ```bash
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  finalize_conditioning_validation
+  validate_conditioning
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  norm_input_ablation report
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  plot_cmd_norm_s
+  norm_input_ablation compare_results
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
   plot_norm_cmd_full
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  analyse_fibre_original_control
+  analyse_fibre
 ```
 
 | Result | Location inside the work directory |
@@ -117,10 +115,10 @@ uv run --script --locked experiments/conditioning/suite.py run --workdir /path/t
 | NORM input-ablation frontier PDF and summary | `norm_input_ablation_2026-10-16/` |
 | Full-sample CMD PDF, bin counts, KDE and metadata | `norm_cmd_full_2026-10-18/` |
 | Per-spectrum latent correction S and photometry | `norm_cmd_s_2026-10-16/plot_data.parquet` |
-| Fibre performance and structure tables | `fibre_mass_conditioning_2026-10-14/original_control_comparison/` |
+| Fibre performance table (structure checks printed to console) | `fibre_mass_conditioning_2026-10-14/original_control_comparison/` |
 | Frozen validation choices and held-out scores | `conditioning_validation_2026-10-13/` |
 
-`plot_cmd_norm_s` checks that the selected seed-42, budget-15 equation has constant
+`plot_norm_cmd_full` checks that the selected seed-42, budget-15 equation has constant
 latent derivatives and that `S = sum(w_i x_i)` equals `f(x,n,z)-f(0,n,z)` on all
 splits. The CMD uses catalogue `ABSMAG_g-ABSMAG_r` and the paper's magnitude
 conversion and filters. Full-sample counts use every matched row (440,087 here).
@@ -129,16 +127,12 @@ KDE probability mass using a reproducible 60,000-row subsample; they are not exa
 fractions of the empirical histogram. No random subsampling is used for counts or
 mean S. SciencePlots falls back to Matplotlib text when LaTeX is unavailable.
 
-For the full matched total-mass structural analysis, run
-`analyse_matched_conditioning`. For the fibre diagnostic reconstruction, supply the data root through the launcher, as:
+The fibre manuscript comparison reads saved selections directly and includes
+the latent-linearity checks needed by the appendix:
 
 ```bash
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  --data-root /path/to/data analyse_fibre_mass
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  audit_shared_structure
-uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
-  analyse_fibre_original_control
+  analyse_fibre
 ```
 
 The full fibre diagnostics need raw catalogues, embeddings and the saved NORM YAML;
@@ -165,14 +159,30 @@ patience 40. Minimum validation MSE chooses the checkpoint before test scoring.
 Histories, preprocessing, checkpoints and predictions are saved. Weak probe
 performance is evidence of reduced accessible dependence, not proof of independence.
 
-`fibre_mass_mlp_control` uses the same architecture and stopping procedure with
-12 inputs: latents **plus NORM and z**. It is not a latent-only probe. The exported
-bundle includes its reference result directory; move
-`fibre_mass_conditioning_2026-10-14/mlp_control_2026-10-15` outside the working tree
-before rerunning that script. Other training scripts also refuse existing outputs.
-Some historical fibre runs reached the epoch cap; retain that limitation when
-comparing their scores. The reference checkpoints are not in the bundle; rerunning
-training produces new ones.
+`fibre_mass_mlp_control` now uses scikit-learn `MLPRegressor` with 12 inputs:
+latents **plus NORM and z**. The 64/32 ReLU architecture, Adam learning rate
+0.001, batch size 1024, 500-epoch cap and patience 40 are retained; `alpha=0`
+preserves the previous absence of weight decay. `partial_fit` performs one
+epoch at a time so checkpoint selection uses the existing full validation split,
+not sklearn's internal random split. Input and target scalers are fitted only
+on each seed's saved 10,000 training rows. Test predictions are computed after
+the selected checkpoint is saved. The shared trainer and experiment runner are in `wwdc_repro.shared.mlp`; both fibre and latent-only callers use them.
+
+```bash
+.venv/bin/python experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
+  fibre_mass_mlp_control
+```
+
+New checkpoints (`.joblib`), histories, predictions and CSV results are saved
+under `fibre_mass_conditioning_2026-10-14/mlp_sklearn/`; use `--outdir` for a new
+location on subsequent runs. Existing output directories are refused. The older
+PyTorch results in `mlp_control_2026-10-15` are preserved for comparison.
+Switching implementations changes initialization, numerical precision and
+optimizer details, so scores must be remeasured rather than assumed identical.
+The saved-equation reproduction collector still labels and exports the archived
+PyTorch table as `archived_fibre_mlp.csv`; it does not silently replace it with
+these new results. Reconcile the manuscript table and caption with the new run
+before changing that archival comparison.
 
 ## Symbolic regression and validation
 
@@ -205,7 +215,7 @@ Other rerun entry points:
 - `norm_input_ablation fit --arm norm --seed 42`: without explicit NORM; prepared
   matrices must remain, and `norm_seed42` in its output root must first be moved.
 - `fibre_mass_conditioning fit --arm norm --seed 42`: conditional fibre fits.
-- `fibre_mass_original_control fit --seed 42`: original-latent fibre fit.
+- `fibre_mass_conditioning fit --arm original --seed 42`: original-latent fibre fit.
 - `rerun_conditioning_exports`: reruns both NORM seed-42 fronts and checks exact
   archived equation matches before recovering 60-decimal exports. Move both
   `rerun_norm_cond_seed42` and `rerun_norm_cond+z_seed42` aside first.
@@ -213,18 +223,32 @@ Other rerun entry points:
   NORM candidate pools using raw embeddings/catalogues and the historical runner.
   Move the corresponding `job_results_*` directory first. That runner retains
   historical test-based diagnostic model summaries; **do not use those summaries
-  for paper selection**. Follow it with `validate_conditioning` and
-  `finalize_conditioning_validation`.
+  for paper selection**. Follow it with `validate_conditioning --prepare` (with matching recovery
+  exports available for the two NORM seed-42 fronts).
 
 Raw-data stages take the launcher's `--data-root /path/to/data` before the script
-name. `validate_conditioning` rebuilds matrices and initial candidate audits;
-`finalize_conditioning_validation` verifies recovered exports and writes the final
-frozen selection before test evaluation. `check_conditioning_physics` reconstructs
-the physical scaling metadata. Preparation helpers are also included in
+name. `validate_conditioning` now combines the former validation and finalisation stages.
+By default it loads saved candidate metadata and matrices, verifies precision
+recoveries, recalculates every candidate audit, freezes validation choices, and
+then evaluates the held-out test samples. Archived audit scores are not trusted
+or reused. Output filenames remain compatible with the downstream scripts.
+Use `validate_conditioning --prepare-only` to rebuild matrices, IDs and
+`candidates.csv` from raw inputs without selection; `--prepare` performs that
+preparation and then the combined validation. Searches and export recovery remain
+separate commands. `norm_conditioning_probe.norm_target_scaling` reconstructs
+the NORM target scaling directly from raw inputs and the flow checkpoint YAML;
+the probe no longer needs physical-diagnostic metadata. Supply `--data-root`
+to the suite launcher (or set DATA_ROOT) when running the probe.
+Preparation helpers are also included in
 `matched_conditioning_controls`, `fibre_mass_conditioning`,
-`fibre_mass_original_control` and `norm_input_ablation`; the archive already
+`fibre_mass_conditioning` and `norm_input_ablation`; the archive already
 contains their outputs. Do not run preparation over existing prepared directories.
-The packaged `val_rescore` is helper-only: its obsolete test-gated CLI was removed.
+NORM validation preparation now shares `wwdc_repro.shared.data` with redshift: catalogue
+joins, target cleaning and train-fitted scaling all use that module. Explicit
+NORM is passed through `matrices(..., scaled_columns=("norm",))`; raw redshift
+is still appended after scaling. `validate_conditioning` no longer imports
+`conditioning_data`. Other historical control/fibre helpers still use `conditioning_data`;
+its obsolete test-gated CLI remains removed.
 
 ## Conditional generation and upstream provenance
 
@@ -249,7 +273,7 @@ Source hashes and the pinned commit are in
 the new route does not require applying that patch. The archived YAMLs record
 the configurations, while exact historical training source remains uncertain.
 
-After `plot_cmd_norm_s`, run:
+After `plot_norm_cmd_full`, run:
 
 ```bash
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
@@ -289,7 +313,7 @@ Public hosting of exact inputs/checkpoints remains a release task. The paper's t
 
 ## Figure 1 equivalent for NORM conditioning
 
-After `norm_input_ablation report`, run:
+After `norm_input_ablation compare_results`, run:
 
 ```bash
 uv run --script --locked experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
@@ -314,6 +338,28 @@ recomputes the right panels from `decoded_raw` rather than reading `amplitude_re
 To replot existing generation arrays without running the flow again:
 
 ```bash
-python experiments/conditioning/scripts/preview_raw_norm_sequence.py \
+python src/wwdc_repro/norm/generate_norm_sequence.py \
   --input /path/to/saved-generation --outdir /path/to/raw-output-plot
 ```
+
+### Source edits and data verification
+
+Source hashes are provenance records, not execution gates. `verify` checks
+exported input data hashes; the runner also checks prepared inputs against the
+reference manifest. Comment or code edits do not require updating source hashes.
+The historical `source_manifest.json` remains a provenance reference only.
+On `run`, workflows execute `wwdc_repro` modules directly. Existing staged-code
+backups are historical outputs and are no longer used by the launcher.
+
+For already-prepared latent-only probe matrices, the shared sklearn runner can
+be invoked without repeating catalogue preparation or linear probes:
+
+```bash
+.venv/bin/python experiments/conditioning/suite.py run --workdir /path/to/conditioning-work \
+  latent_mlp --base norm_conditioning_probe_2026-10-18
+```
+
+This creates `mlp_sklearn/` beneath that base directory (or accepts `--outdir`).
+The full `norm_conditioning_probe` command now also calls this shared runner and
+verifies the new `val_mse_dex` history column. The archival manuscript table is
+unchanged until a new NORM probe run is performed and reconciled.

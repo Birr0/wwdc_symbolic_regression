@@ -77,7 +77,7 @@ uv run --frozen wwdc-cmd-cache \
 
 The builder verifies all five shard hashes before joining on `VAC_ID`. It
 preserves source-row order in the explicit shard order recorded in
-`src/wwdc_repro/catalogue_sources.json`, then retains the first match per
+`src/wwdc_repro/resources/catalogue_sources.json`, then retains the first match per
 `specObjID`. This is the historical paper rule: 13 IDs have multiple candidates,
 and the resulting cache has 525,505 unique spectrum IDs. Seven ambiguous IDs
 occur in the plotted sample; removing them was previously found to have a

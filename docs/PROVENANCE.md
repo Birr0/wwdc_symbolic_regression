@@ -19,7 +19,7 @@ This numerical comparison does not establish the checkpoint's full training hist
 The local source of this package was the reviewed analysis under
 `examples/spectra/symbolic_regression/` and the pre-submission audit under
 `papers/wwdc_symbolic_regression/pre-submission/audit/` in the `flower`
-workspace. The data join follows `val_rescore.py`: saved split embeddings,
+workspace. The data join follows `conditioning_data.py`: saved split embeddings,
 astroML SDSS specgals, then galSpecExtra; it applies `mask_ratio <= 0.5`,
 `z <= 0.3`, and valid `lgm_tot_p50`. The astroML source itself has `z > 0.02`.
 
@@ -32,6 +32,12 @@ and export-precision limitations. The main analysis uses archived fronts as
 inputs. Separate [search experiments](../experiments/README.md) reproduced
 specific arm/seed fronts exactly on the audited runtime; this is not a claim
 of exact replay for all seeds or across platforms.
+
+Saved front directories use `job_results_{target}_{arm}_seed{seed}` for every
+arm. The three `orig+z` directories were renamed from the historical
+`job_results_origz_lgm_tot_p50_cond+z_seed{seed}` to
+`job_results_lgm_tot_p50_orig+z_seed{seed}`. Their CSV contents and hashes are
+unchanged; bundled manifest and audit path references use the new names.
 
 ## Work remaining for the public artifact
 

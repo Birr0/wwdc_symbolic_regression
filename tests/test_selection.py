@@ -9,7 +9,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from wwdc_repro.frontier import select_by_budget, evaluate_selected, curves, score_fronts, front_path
+from wwdc_repro.redshift.frontier import select_by_budget, evaluate_selected, curves, score_fronts, front_path
 
 
 class SelectionTests(unittest.TestCase):
@@ -26,10 +26,10 @@ class SelectionTests(unittest.TestCase):
             # Test matrices are intentionally absent: eligibility must not access them.
             data = {"X_train": np.array([[1.], [2.]]), "y_train": np.array([1., 2.]),
                     "X_val": np.array([[3.], [4.]]), "y_val": np.array([3., 4.])}
-            with patch("wwdc_repro.frontier.ARMS", ("orig",)), \
-                 patch("wwdc_repro.frontier.SEEDS", (42,)), \
-                 patch("wwdc_repro.frontier.matrices", return_value=data), \
-                 patch("wwdc_repro.frontier.importlib.resources.files") as resources:
+            with patch("wwdc_repro.redshift.frontier.ARMS", ("orig",)), \
+                 patch("wwdc_repro.redshift.frontier.SEEDS", (42,)), \
+                 patch("wwdc_repro.redshift.frontier.matrices", return_value=data), \
+                 patch("wwdc_repro.redshift.frontier.importlib.resources.files") as resources:
                 resources.return_value.joinpath.return_value.read_text.return_value = json.dumps(recovery)
                 scores = score_fronts({}, root)
                 self.assertTrue(scores.iloc[0].selectable)
@@ -46,10 +46,10 @@ class SelectionTests(unittest.TestCase):
             dict(arm="orig", seed=42, length=6, equation="log(X1)", validation_r2=.9,
                  selectable=True, source="fixture"),
         ])
-        selected = select_by_budget(candidates)
+        selected = select_by_budget(candidates, selection="validation")
         # No test scores exist when the choice is made.
         self.assertNotIn("test_r2", selected)
-        with patch("wwdc_repro.frontier.matrices", return_value={
+        with patch("wwdc_repro.redshift.frontier.matrices", return_value={
             "X_test": np.array([[-1.], [-2.]]), "y_test": np.array([-1., -2.])
         }):
             evaluated = evaluate_selected({}, selected)

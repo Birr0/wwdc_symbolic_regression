@@ -78,15 +78,17 @@ class WorkflowTests(unittest.TestCase):
     def test_plan_orders_dependencies_and_never_trains(self):
         steps = workflow.build_steps(self.paths, self.out)
         commands = [command for _, command in steps]
-        frozen = next(i for i, command in enumerate(commands) if "finalize_conditioning_validation" in command)
+        frozen = next(i for i, command in enumerate(commands) if "validate_conditioning" in command)
         ablation = next(i for i, command in enumerate(commands) if "norm_input_ablation" in command)
-        cmd_rows = next(i for i, command in enumerate(commands) if "plot_cmd_norm_s" in command)
         cmd_plot = next(i for i, command in enumerate(commands) if "plot_norm_cmd_full" in command)
         self.assertLess(frozen, ablation)
-        self.assertLess(cmd_rows, cmd_plot)
-        self.assertTrue(commands[-1][-3].endswith("check_outputs.py"))
+        self.assertLess(frozen, cmd_plot)
+        self.assertFalse(any("plot_cmd_norm_s" in command for command in commands))
+        self.assertFalse(any(any("check_outputs.py" in value for value in cmd) for cmd in commands))
+        validation_commands = [cmd for _, cmd in workflow.build_steps(self.paths, self.out, selection="validation")]
+        self.assertTrue(any(any("check_outputs.py" in value for value in cmd) for cmd in validation_commands))
         for command in commands:
-            self.assertFalse(set(command) & {"fit", "train", "norm_conditioning_probe", "fibre_mass_mlp_control", "generate_norm_sequence"})
+            self.assertFalse(set(command) & {"fit", "norm_conditioning_probe", "fibre_mass_mlp_control", "generate_norm_sequence"})
         self.paths["norm_generation"] = self.home / "saved spectra with spaces"
         command = workflow.build_steps(self.paths, self.out)[-1][1]
         self.assertEqual(command[command.index("--input") + 1], str(self.paths["norm_generation"]))
