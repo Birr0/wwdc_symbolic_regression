@@ -55,7 +55,7 @@ def fit_sym_fn(
         Target column when preparing DataFrames; a metadata label when using
         matrices. Flux targets are filtered and log10-transformed by the builder.
     embed_type : str
-        Input representation: z, cond, cond+z, uncond, or orig. When matrices are
+        Input representation: z, cond, cond+z, uncond, orig, or orig+z. When matrices are
         supplied, their columns are used unchanged and this is only a label.
     merged_dfs : dict[str, pandas.DataFrame] or None
         Split DataFrames to clean and scale. Pass None when supplying matrices.
@@ -79,7 +79,7 @@ def fit_sym_fn(
     Notes
     -----
     DataFrame preprocessing fits the latent scaler on all cleaned training rows
-    before sampling, and appends raw redshift after scaling for cond+z. Prepared
+    before sampling, and appends raw redshift after scaling for +z arms. Prepared
     matrices must already follow the intended preprocessing. Validation and test
     scores do not participate in the search. No previous run files are required.
     """
@@ -142,7 +142,7 @@ def fit_model_fn(feature, embed_type, estimator, merged_dfs):
         Target column. Targets whose names contain ``flux`` are restricted to
         positive values and transformed with log10.
     embed_type : str
-        Input representation: ``z``, ``cond``, ``cond+z``, ``uncond``, or ``orig``.
+        Input representation: ``z``, ``cond``, ``cond+z``, ``uncond``, ``orig``, or ``orig+z``.
     estimator : sklearn-compatible regressor
         Model implementing ``fit`` and ``predict``; fitted in place.
     merged_dfs : dict[str, pandas.DataFrame]

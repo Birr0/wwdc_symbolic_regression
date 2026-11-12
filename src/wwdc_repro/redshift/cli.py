@@ -168,7 +168,7 @@ def draw_frontier(summary: pd.DataFrame, outdir: Path) -> None:
 
 
 def check_reference(
-    samples: pd.DataFrame, scores: pd.DataFrame, selected: pd.DataFrame, selection="train"
+    samples: pd.DataFrame, scores: pd.DataFrame, selected: pd.DataFrame, selection="train", *, fresh_fronts=False
 ) -> list[dict]:
     """Compare this run with the expected values stored in reference.json.
 
@@ -218,6 +218,8 @@ def check_reference(
         add(f"{row.split}.rows", row.rows, expected["rows"])
         add(f"{row.split}.id_sha256", row.id_sha256, expected["id_sha256"])
         add(f"{row.split}.ordered_id_sha256", row.ordered_id_sha256, expected["ordered_id_sha256"])
+    if fresh_fronts:
+        return checks  # Fresh searches need not reproduce historical equations/counts.
     add("candidate_count", len(scores), reference["candidate_count"])
     if selection != "validation":
         return checks  # Remaining archived references describe validation selection.
@@ -308,7 +310,7 @@ def run(args: argparse.Namespace) -> None:
     evaluate_selected(clean, scores).to_csv(args.outdir / "front_test_scores.csv", index=False)
     summary = curves(selected)
 
-    checks = check_reference(samples, scores, selected, selection=args.selection)
+    checks = check_reference(samples, scores, selected, selection=args.selection, fresh_fronts=getattr(args, "fresh_fronts", False))
     (args.outdir / "checks.json").write_text(json.dumps(checks, indent=2) + "\n")
     scores.to_csv(args.outdir / "candidate_scores.csv", index=False)
     selected.to_csv(args.outdir / "selected.csv", index=False)
@@ -332,6 +334,7 @@ def main() -> None:
     parser.add_argument("--fronts", type=Path, required=True)
     parser.add_argument("--outdir", type=Path, required=True)
     parser.add_argument("--selection", choices=("train", "validation"), default="train")
+    parser.add_argument("--fresh-fronts", action="store_true", help="Check sample integrity without requiring historical search results")
     parser.add_argument("--tolerance", type=float, default=1e-6)
     run(parser.parse_args())
 

@@ -21,6 +21,8 @@ def main():
     parser.add_argument('--selection', choices=('train', 'validation'), default='train')
     args = parser.parse_args()
     selections = []
+    train_indices = {seed: np.load(OUT / f"train_indices_seed{seed}.npy")
+                     for seed in (42, 43, 44)}
     for arm in ('original', *CONDITIONED_ARMS):
         audits = []
         for seed in (42, 43, 44):
@@ -32,7 +34,7 @@ def main():
             audits.append(pd.read_csv(path / 'candidate_audit.csv'))
         with np.load(OUT / f'{arm}_matrices.npz') as data:
             selections.append(report_front(pd.concat(audits, ignore_index=True), data,
-                                           selection=args.selection))
+                                           selection=args.selection, train_indices=train_indices))
     combined = pd.concat(selections, ignore_index=True)
     combined.to_csv(DEST / 'selected.csv', index=False)
     mats = np.load(OUT / "original_matrices.npz") # load the saved matrices.

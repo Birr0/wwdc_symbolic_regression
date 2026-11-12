@@ -12,14 +12,14 @@ from matplotlib.colors import TwoSlopeNorm
 from wwdc_repro.shared.figstyle import STYLE, INK, INK_MUTED, SURFACE, tidy
 from wwdc_repro.shared.equations import to_sympy, evaluate
 
-OUT = Path("norm_cmd_full_2026-10-18")  # final figure dir
-BASE = Path("conditioning_validation_2026-10-13")  # where equations are saved
-DATA_OUT = Path("norm_cmd_s_2026-10-16")  # where plot data is saved
+OUT = Path("norm_cmd")  # final figure dir
+BASE = Path("norm_analysis")  # where equations are saved
+DATA_OUT = Path("norm_cmd/data")  # where plot data is saved
 
 
 def prepare_data():
     """Check the additive term and save a unit-coefficient latent score with photometry."""
-    DATA_OUT.mkdir(exist_ok=True)
+    DATA_OUT.mkdir(parents=True, exist_ok=True)
     source = BASE / "validation_selected_final.csv"
     selected = pd.read_csv(source)
     r = selected[

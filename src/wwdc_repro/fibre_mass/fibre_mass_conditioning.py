@@ -5,6 +5,7 @@ fit --arm original|zflow|norm|znorm --seed 42|43|44.
 """
 
 from pathlib import Path
+from wwdc_repro.shared.search_runs import add_search_options
 import argparse
 import json
 import hashlib
@@ -14,8 +15,8 @@ from wwdc_repro.shared.conditioning_data import build_merged, build_matrices
 from wwdc_repro.norm.validate_conditioning import ROOT, SPECS
 import wwdc_repro.norm.matched_conditioning_controls as controls
 
-BASE = Path("conditioning_validation_2026-10-13")  # existing total mass data dir
-OUT = Path("fibre_mass_conditioning_2026-10-14")  # existing fibre mass data dir
+BASE = Path("norm_analysis")  # existing total mass data dir
+OUT = Path("fibre_mass")  # existing fibre mass data dir
 TARGET = "LGM_FIB_P50"
 CONDITIONED_ARMS = ("zflow", "norm", "znorm")
 ARMS = (*CONDITIONED_ARMS, "original")
@@ -189,6 +190,7 @@ if __name__ == "__main__":
     ap.add_argument("--arm", choices=ARMS)
     ap.add_argument("--seed", type=int, choices=[42, 43, 44])
     ap.add_argument("--selection", choices=("train", "validation"), default="train")
+    add_search_options(ap)
     args = ap.parse_args()
     if args.stage == "prepare":
         prepare()
@@ -196,4 +198,4 @@ if __name__ == "__main__":
         if args.arm is None or args.seed is None:
             ap.error("fit requires --arm and --seed")
         controls.OUT = OUT
-        controls.fit(args.arm, args.seed, target=TARGET, prepared_indices=True, selection=args.selection)
+        controls.fit(args.arm, args.seed, target=TARGET, prepared_indices=True, selection=args.selection, threads=args.threads, restart_incomplete=args.restart_incomplete)

@@ -24,7 +24,7 @@ def main():
         else:
             release = json.loads(args.release_lock.read_text())
             if release.get("status") != "published" or not release.get("revision") or not release.get("manifest_sha256"):
-                raise ValueError("The HF release has not been published/pinned yet. See docs/DATA_RELEASE.md.")
+                raise ValueError("The HF release has not been published/pinned yet. See README.md.")
             from huggingface_hub import hf_hub_download, snapshot_download
             path = Path(hf_hub_download(release["repo_id"], "release.json", repo_type="dataset", revision=release["revision"]))
             if digest(path) != release["manifest_sha256"]:

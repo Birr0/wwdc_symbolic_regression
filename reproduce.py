@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 # Support direct execution without installing the package.
 sys.path.insert(0, str(ROOT / "src"))
 from wwdc_repro.shared.utils import sha256 as digest
+from wwdc_repro.shared.paths import ARCHIVE_PATHS
 REQUIRED = ("embeddings", "galspec", "specgals_home", "conditioning_archive") # required entries in the config
 OPTIONAL = ("cmd_cache", "norm_generation") # optional entries for the config.
 
@@ -140,7 +141,7 @@ def check_inputs(paths, outdir):
         # report any discovered problems.
         shown = "\n".join(f"  - {p}" for p in problems[:12])
         extra = f"\n  ... and {len(problems) - 12} more" if len(problems) > 12 else ""
-        raise ValueError(f"Input check failed:\n{shown}{extra}\nSee docs/INPUTS.md and docs/CONDITIONING.md.")
+        raise ValueError(f"Input check failed:\n{shown}{extra}\nSee README.md.")
     return len(expected)
 
 def build_steps(paths, outdir, selection="train"):
@@ -247,9 +248,9 @@ def collect_results(outdir, paths):
         raise ValueError("No redshift figure PDFs were produced")
     files += [
         (work / "norm_frontier/norm_frontier.pdf", outdir / "figures/normalisation/norm_frontier.pdf"),
-        (work / "norm_cmd_full_2026-10-18/norm_cmd_full.pdf", outdir / "figures/normalisation/norm_cmd.pdf"),
-        (work / "norm_input_ablation_2026-10-16/summary.csv", outdir / "tables/norm_ablation.csv"),
-        (work / "fibre_mass_conditioning_2026-10-14/original_control_comparison/performance.csv",
+        (work / "norm_cmd/norm_cmd_full.pdf", outdir / "figures/normalisation/norm_cmd.pdf"),
+        (work / "norm_ablation/summary.csv", outdir / "tables/norm_ablation.csv"),
+        (work / "fibre_mass/original_control_comparison/performance.csv",
          outdir / "tables/fibre_sr.csv"),
         (redshift_figures / "latent_weights.tex", outdir / "tables/latent_weights.tex"),
         (redshift_figures / "front_condz.tex", outdir / "tables/front_condz.tex"),
@@ -268,8 +269,8 @@ def collect_results(outdir, paths):
         shutil.copy2(source, destination) # copy files over.
 
     archived = [
-        ("norm_conditioning_probe_2026-10-18/mlp/summary.csv", "archived_norm_probe_mlp.csv", {"original", "norm", "zflow"}),
-        ("fibre_mass_conditioning_2026-10-14/mlp_control_2026-10-15/summary.csv", "archived_fibre_mlp.csv", {"original", "norm"}),
+        (ARCHIVE_PATHS["mlp_references"]["norm_probe"], "archived_norm_probe_mlp.csv", {"original", "norm", "zflow"}),
+        (ARCHIVE_PATHS["mlp_references"]["fibre_mass"], "archived_fibre_mlp.csv", {"original", "norm"}),
     ] # mlp results to include.
 
     for relative, name, arms in archived:
@@ -285,7 +286,7 @@ def collect_results(outdir, paths):
     # create a short index of the run for inspection.
     sequence = "Replotted from supplied saved arrays." if "norm_generation" in paths else "Not produced: no norm_generation arrays supplied."
     index = ["# Saved-equation reproduction results", "",
-             "Redshift reference checks and three conditioning-table comparisons passed.", "",
+             "Completed workflow steps and checks are recorded in summary.json.", "",
              "- [Figures](figures/): redshift and NORM frontier/CMD PDFs.",
              "- [Tables](tables/): regenerated NORM ablation, fibre SR, latent weights, archived conditional+z equations, Taylor truncation and prediction coverage.",
              "- [Run summary](summary.json): completed steps and commands.",
@@ -376,6 +377,10 @@ def run_steps(steps, outdir, paths, config):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] in {"equations", "plots", "tables"}:
+        from wwdc_repro.workflows.paper_stages import main as stage_main
+        stage_main(sys.argv[1:])
+        return
     # coordinate functions above to build and then run the reproduction workflow.
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("reproduction.json"), help="Input paths; relative paths resolve beside this file")

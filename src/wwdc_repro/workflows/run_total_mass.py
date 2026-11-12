@@ -8,11 +8,13 @@ Write ``pareto_fronts.csv`` and ``summary_metrics.csv`` to
 ``job_results_{feature}_{embed_type}_seed{seed}/``. The default target is total
 stellar mass (``lgm_tot_p50``). Use ``--conditioning norm`` for NORM embeddings
 and ``--append-norm`` to include their conditioning values explicitly.
-``--out`` selects the parent output directory; existing runs are not overwritten.
+``--out`` selects the parent output directory. Verified completed runs are skipped;
+``--restart-incomplete`` preserves and restarts interrupted/unverified attempts.
+``--threads`` sets Operon threads per search (default eight).
 
 Usage:
     python -m wwdc_repro.workflows.run_total_mass --embed-type cond+z --seed 42
-    python -m wwdc_repro.workflows.run_total_mass  # All five representations and three seeds.
+    python -m wwdc_repro.workflows.run_total_mass  # All six representations and three seeds.
 """
 
 from __future__ import annotations
@@ -27,15 +29,16 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.neural_network import MLPRegressor
-from wwdc_repro.shared.fitting import fit_model_fn, fit_sym_fn
+from wwdc_repro.shared.fitting import fit_model_fn, fit_sym_fn, search_parameters
+from wwdc_repro.shared.search_runs import search_run, input_hashes, add_search_options
 from wwdc_repro.shared.conditioning_data import build_merged
 
-EMBED_TYPES = ["z", "cond", "cond+z", "uncond", "orig"]  # embeddings to be fit
+EMBED_TYPES = ["z", "cond", "cond+z", "uncond", "orig", "orig+z"]  # embeddings to be fit
 SEEDS = [42, 43, 44]
 
 
 def run_cell(
-    feature: str, embed_type: str, seed: int, merged: dict[str, pd.DataFrame]
+    feature: str, embed_type: str, seed: int, merged: dict[str, pd.DataFrame], *, threads: int = 8
 ) -> tuple[pd.DataFrame, dict]:
     """Fit and score symbolic and reference models for specified embeddings and seed.
 
@@ -44,12 +47,14 @@ def run_cell(
     feature : str
         Name of the target column in the merged DataFrames.
     embed_type : str
-        Input representation: ``z``, ``cond``, ``cond+z``, ``uncond``, or ``orig``.
+        Input representation: ``z``, ``cond``, ``cond+z``, ``uncond``, ``orig``, or ``orig+z``.
     seed : int
         Random seed passed to the symbolic fitter and MLP model.
     merged : dict[str, pandas.DataFrame]
         Training, validation, and test DataFrames containing embeddings and
         catalogue properties, keyed by ``train``, ``val``, and ``test``.
+    threads : int, optional
+        Number of Operon threads for the symbolic search. Default is 8.
 
     Returns
     -------
@@ -61,7 +66,7 @@ def run_cell(
         test scores; and the test MSE of the best training equation.
     """
     started = time.time()
-    results_sym = fit_sym_fn(feature, embed_type, merged, seed)
+    results_sym = fit_sym_fn(feature, embed_type, merged, seed, parameter_overrides={"n_threads": threads})
     model = results_sym["Model"]
 
     best_len, best_train_mse, selected_test_mse = None, float("inf"), float("nan")
@@ -141,7 +146,7 @@ def main(conditioning: str = "redshift") -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     data_root = os.environ.get("DATA_ROOT", "data")
     parser.add_argument(
-        "--conditioning", choices=("redshift", "norm"), default=conditioning
+        "--conditioning", choices=("redshift", "norm", "znorm"), default=conditioning
     )
     parser.add_argument("--feature", default="lgm_tot_p50")
     parser.add_argument("--embed-type", default=None, choices=EMBED_TYPES)
@@ -157,15 +162,17 @@ def main(conditioning: str = "redshift") -> None:
         action="store_true",
         help="Append stored NORM to cond; only cond and cond+z are supported",
     )
+    add_search_options(parser)
     args = parser.parse_args()
     if args.append_norm and (
-        args.conditioning != "norm" or args.embed_type not in (None, "cond", "cond+z")
+        args.conditioning not in ("norm", "znorm") or args.embed_type not in (None, "cond", "cond+z")
     ):
-        parser.error("--append-norm requires NORM embeddings and cond or cond+z")
+        parser.error("--append-norm requires NORM or joint embeddings and cond or cond+z")
 
     defaults = {
         "redshift": "sdss_II/spender_I_flow_v2/spender_I_flow_v2/embeddings/7655991_0",
         "norm": "sdss_II/spender_I_normalisation_flow/embeddings/norm_20261012183217_0",
+        "znorm": "sdss_II/spender_I_z_normalisation_flow/embeddings/znorm_20261013104946_0",
     }
     embeddings = args.embeddings or str(Path(data_root) / defaults[args.conditioning])
     if args.embed_type:
@@ -180,36 +187,44 @@ def main(conditioning: str = "redshift") -> None:
 
     # Preserve archived output names without creating artificial target columns.
     prefix = ""
-    if args.conditioning == "norm":
-        prefix = "normflow_condnorm_" if args.append_norm else "normflow_"
+    if args.conditioning in ("norm", "znorm"):
+        prefix = f"{args.conditioning}flow_condnorm_" if args.append_norm else f"{args.conditioning}flow_"
     output_feature = f"{prefix}{args.feature}"
     cells = [
         (arm, seed, args.out / f"job_results_{output_feature}_{arm}_seed{seed}")
         for arm in arms
         for seed in seeds
     ]
-    clashes = [str(directory) for _, _, directory in cells if directory.exists()]
-    if clashes:
-        raise SystemExit(f"refusing to overwrite existing results: {clashes}")
-
-    print(f"target: {args.feature}  embeddings: {embeddings}")
-    merged = build_merged(embeddings, args.galspec, args.specgals_home)
-    if args.append_norm:
-        for split, frame in merged.items():
-            cond = np.stack(frame["cond"].values)
-            norm = np.stack(frame["y"].values).reshape(-1, 1)
-            frame["cond"] = list(np.hstack([cond, norm]))
-            print(f"  {split}: cond widened to {cond.shape[1] + 1} dims with NORM")
-
+    sources = [Path(args.galspec), *(Path(args.specgals_home) / f"SDSSspecgalsDR8_{i}.fit.gz" for i in (1, 2))]
+    for split in ('train', 'val', 'test'):
+        shards = sorted((Path(embeddings) / split).glob('*.parquet'))
+        if not shards:
+            raise FileNotFoundError(f'No embeddings in {embeddings}/{split}')
+        sources.extend(shards)
+    hashes = input_hashes(sources) # create input hashes of sources
+    merged = None
     for embed_type, seed, job_dir in cells:
-        print(f"\n=== {output_feature} | {embed_type} | seed {seed} ===", flush=True)
-        front, summary = run_cell(args.feature, embed_type, seed, merged)
-        front["Feature"] = output_feature
-        summary["Feature"] = output_feature
-        job_dir.mkdir(parents=True, exist_ok=False)
-        front.to_csv(job_dir / "pareto_fronts.csv", index=False)
-        pd.DataFrame([summary]).to_csv(job_dir / "summary_metrics.csv", index=False)
-        print(f"  wrote {job_dir}/", flush=True)
+        configuration = dict(target=args.feature, arm=embed_type, seed=seed,
+                             append_norm=args.append_norm, conditioning=args.conditioning,
+                             parameters=search_parameters(seed, {"n_threads": args.threads}), input_hashes=hashes) # create search configuration
+        with search_run(job_dir, configuration, ('pareto_fronts.csv', 'summary_metrics.csv'),
+                        restart_incomplete=args.restart_incomplete) as required:
+            if not required:
+                continue
+            if merged is None:
+                merged = build_merged(embeddings, args.galspec, args.specgals_home)
+                if args.append_norm:
+                    for frame in merged.values():
+                        cond = np.stack(frame['cond'].values)
+                        norm = np.stack(frame['y'].values).reshape(len(frame), -1)[:, -1:]
+                        frame['cond'] = list(np.hstack([cond, norm]))
+            print(f"=== {output_feature} | {embed_type} | seed {seed} ===", flush=True)
+            front, summary = run_cell(args.feature, embed_type, seed, merged, threads=args.threads)
+            front['Feature'] = output_feature
+            summary['Feature'] = output_feature
+            front.to_csv(job_dir / 'pareto_fronts.csv', index=False)
+            pd.DataFrame([summary]).to_csv(job_dir / 'summary_metrics.csv', index=False)
+            print(f"Wrote {job_dir}/", flush=True)
 
 
 if __name__ == "__main__":

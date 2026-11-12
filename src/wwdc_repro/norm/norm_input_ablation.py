@@ -1,6 +1,7 @@
 """Paired total-mass SR ablation: remove only the explicit NORM predictor.
 """
 from pathlib import Path
+from wwdc_repro.shared.search_runs import add_search_options, positive_int
 import argparse
 import json
 import shutil
@@ -11,7 +12,7 @@ import pandas as pd
 import wwdc_repro.norm.matched_conditioning_controls as controls
 from wwdc_repro.shared.selection import report_front
 
-OUT = Path('norm_input_ablation_2026-10-16')
+OUT = Path('norm_ablation')
 ARMS = ('original', 'norm')
 SEEDS = (42, 43, 44)
 
@@ -105,9 +106,9 @@ def prepare():
     metadata['selection'] = 'Chosen at reporting time: training default, validation optional; frozen before test.'
     (OUT / 'preparation.json').write_text(json.dumps(metadata, indent=2))
 
-def run(selection="train"):
+def run(selection="train", *, threads=8, max_workers=2, restart_incomplete=False):
     """Run shared searches on prepared ablation inputs, then compare results."""
-    controls.run_searches(OUT, ARMS, SEEDS, prepared_indices=True, selection=selection)
+    controls.run_searches(OUT, ARMS, SEEDS, prepared_indices=True, selection=selection, threads=threads, max_workers=max_workers, restart_incomplete=restart_incomplete)
     compare_results(selection=selection)
 
 
@@ -148,13 +149,17 @@ if __name__ == '__main__':
     ap.add_argument('--arm', choices=ARMS)
     ap.add_argument('--seed', type=int, choices=SEEDS)
     ap.add_argument('--selection', choices=('train', 'validation'), default='train')
+    add_search_options(ap)
+    ap.add_argument("--workers", type=positive_int, default=2, help="Concurrent local searches (run stage)")
     args = ap.parse_args()
     if args.stage == 'fit':
         if args.arm is None or args.seed is None:
             ap.error('fit requires --arm and --seed')
         controls.OUT = OUT
-        controls.fit(args.arm, args.seed, prepared_indices=True, selection=args.selection)
+        controls.fit(args.arm, args.seed, prepared_indices=True, selection=args.selection, threads=args.threads, restart_incomplete=args.restart_incomplete)
     elif args.stage == 'prepare':
         prepare()
+    elif args.stage == "run":
+        run(selection=args.selection, threads=args.threads, max_workers=args.workers, restart_incomplete=args.restart_incomplete)
     else:
-        globals()[args.stage](selection=args.selection)
+        compare_results(selection=args.selection)

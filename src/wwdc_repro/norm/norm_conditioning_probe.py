@@ -8,7 +8,7 @@ same training subsets for seeds 42–44. Neither NORM nor redshift is supplied a
 a predictor.
 
 Save prepared arrays, correlations, model results, and predictions under
-``norm_conditioning_probe_review/``. Verify the saved MLP predictions and
+``norm_probe/``. Verify the saved MLP predictions and
 validation checkpoint epochs, then print a summary for the manuscript's NORM
 probe comparison. Recover target scaling directly from raw NORM embeddings and
 the flow checkpoint YAML under DATA_ROOT; no diagnostic metadata is required.
@@ -27,8 +27,8 @@ import wwdc_repro.norm.latent_mlp as mlp
 from wwdc_repro.shared.conditioning_data import build_merged
 from wwdc_repro.norm.validate_conditioning import ROOT, SPECS
 
-OUT = Path("norm_conditioning_probe_review")
-BASE = Path("conditioning_validation_2026-10-13")
+OUT = Path("norm_probe")
+BASE = Path("norm_analysis")
 MATCH = BASE / "matched_controls"
 ARMS = ("original", "zflow", "norm")
 

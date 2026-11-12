@@ -30,7 +30,7 @@ from wwdc_repro.shared.figstyle import STYLE
 
 ROOT = Path(os.environ["DATA_ROOT"]) / "sdss_II/spender_I_normalisation_flow"
 TAG = "norm_20261012183217_0"
-OUT = Path("norm_generation_random_seed42")
+OUT = Path("norm_sequence")
 
 
 def plot_sequence(source: Path, out: Path) -> None:

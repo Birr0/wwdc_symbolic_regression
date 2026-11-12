@@ -16,3 +16,5 @@ build/
 
 # Local input paths for the combined workflow
 reproduction.json
+
+reproduction.archive.json

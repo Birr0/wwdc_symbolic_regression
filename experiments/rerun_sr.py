@@ -50,7 +50,7 @@ def main():
     parser.add_argument("--arm", default="cond+z", choices=["cond+z", "cond", "orig", "orig+z", "uncond", "z"])
     parser.add_argument("--seed", type=int, default=42, choices=[42, 43, 44])
     parser.add_argument("--data-root", type=Path, required=True,
-                        help="Root containing the archived embeddings, sdss catalogues and galSpecExtra-dr8.fits; see docs/INPUTS.md")
+                        help="Root containing the archived embeddings, sdss catalogues and galSpecExtra-dr8.fits; see README.md")
     parser.add_argument("--outdir", type=Path, required=True)
     args = parser.parse_args()
     embeddings = args.data_root / "sdss_II/spender_I_flow_v2/spender_I_flow_v2/embeddings/7655991_0"

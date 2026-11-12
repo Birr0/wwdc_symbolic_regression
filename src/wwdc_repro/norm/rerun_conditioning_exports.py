@@ -10,7 +10,7 @@ Record the match result, hashes, package versions, and search settings in
 manifest.json. A mismatch is recorded rather than raised as an error.
 
 Outputs go to rerun_norm_{arm}_seed42 directories under
-conditioning_validation_2026-10-13; existing directories are not overwritten.
+norm_analysis; existing directories are not overwritten.
 Run from the prepared conditioning work directory. This module starts the
 searches immediately when executed or imported; it has no command-line options.
 """
@@ -26,7 +26,7 @@ from wwdc_repro.shared.fitting import fit_sym_fn
 from wwdc_repro.norm.validate_conditioning import ROOT, SPECS
 from wwdc_repro.shared.conditioning_data import build_merged
 
-out = Path('conditioning_validation_2026-10-13')
+out = Path('norm_analysis')
 frames = build_merged(str(ROOT / SPECS['norm'][0]), str(ROOT / 'galSpecExtra-dr8.fits'), str(ROOT / 'sdss'))
 for frame in frames.values():
     frame['cond'] = list(np.hstack([np.stack(frame.cond.values), np.stack(frame.y.values).reshape(len(frame), 1)]))

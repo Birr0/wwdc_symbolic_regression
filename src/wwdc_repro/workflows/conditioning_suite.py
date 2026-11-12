@@ -41,8 +41,9 @@ import sys
 HERE = Path(__file__).resolve().parent
 REPRO_ROOT = HERE.parents[2]
 from wwdc_repro.shared.utils import sha256 as digest
+from wwdc_repro.shared.paths import ARCHIVE_PATHS, working_path
 WORKFLOWS = {
-    'validate_conditioning': 'Recover, audit, freeze validation choices and score held-out equations',
+    'validate_conditioning': 'Recover, audit, freeze training or validation choices and score held-out equations',
     'rerun_conditioning_exports': 'Recover high-precision NORM equation exports',
     'matched_conditioning_controls': 'Prepare or fit matched original/z-flow SR controls',
     'norm_input_ablation': 'Section 6: explicit-NORM ablation fits and table',
@@ -76,8 +77,7 @@ SCRIPT_MODULES = {
     'fibre_mass_conditioning': 'wwdc_repro.fibre_mass.fibre_mass_conditioning',
 }
 
-ROOTS = ('conditioning_validation_2026-10-13', 'fibre_mass_conditioning_2026-10-14',
-         'norm_input_ablation_2026-10-16', 'shared_structure_audit_2026-10-14')
+ROOTS = ('norm_analysis', 'fibre_mass', 'norm_ablation')
 SUFFIXES = {'.csv', '.json', '.npz', '.npy', '.pkl', '.parquet', '.tex', '.md'}
 
 
@@ -125,7 +125,10 @@ def export(source, workdir):
     paths = []
     # build a list of files to copy
     for root in ROOTS:
-        folder = source/root
+        # A historical archive may also contain a same-named scripts folder.
+        folder = source / ARCHIVE_PATHS["directories"][root]
+        if not folder.is_dir():
+            folder = source / root
         if not folder.is_dir():
             raise FileNotFoundError(folder)
         paths.extend(p for p in folder.rglob('*') if p.is_file() and p.suffix in SUFFIXES)
@@ -143,12 +146,15 @@ def export(source, workdir):
     records = []
     for p in sorted(set(paths)):
         relative = p.relative_to(source)
-        target = workdir/relative
+        destination = working_path(relative)
+        target = workdir / destination
+        if target.exists():
+            raise FileExistsError(f"Archive paths collide at {destination}")
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(p, target)
-        records.append(dict(path=str(relative), bytes=target.stat().st_size, sha256=digest(target)))
+        records.append(dict(path=str(destination), source_path=str(relative), bytes=target.stat().st_size, sha256=digest(target)))
     (workdir/'conditioning_inputs.json').write_text(json.dumps(dict(
-        schema=1, source=str(source), files=records,
+        schema=2, source=str(source), files=records,
         note='Prepared matrices, frozen fronts and reference results; raw catalogues, embeddings and model weights remain external.'), indent=2)+'\n')
     # record input metadata
     print(f'Copied {len(records)} files ({sum(r["bytes"] for r in records)/1e6:.1f} MB) to {workdir}')
@@ -182,8 +188,8 @@ def main():
         print(f'Verified {len(records)} input files')
     else:
         work = args.workdir.resolve()
-        if not (work/'conditioning_inputs.json').is_file():
-            parser.error('Export inputs into a separate work directory first')
+        if not work.is_dir():
+            parser.error('Create the working directory or export inputs there first')
 
         env = dict(os.environ, MPLBACKEND='Agg')
         # Run the shared package directly; output folders contain data, not staged code.

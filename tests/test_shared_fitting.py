@@ -137,10 +137,15 @@ class SharedFittingTests(unittest.TestCase):
         )
         data = frames()
         with patch.dict(sys.modules, fake_operon()):
-            for arm in ("z", "cond", "cond+z", "uncond", "orig"):
+            for arm in ("z", "cond", "cond+z", "uncond", "orig", "orig+z"):
                 for seed in (42, 43, 44):
                     with self.subTest(arm=arm, seed=seed):
-                        old = namespace["fit_sym_fn"]("lgm_tot_p50", arm, data, seed)
+                        historical_data = ({split: frame.assign(cond=frame.orig)
+                                            for split, frame in data.items()}
+                                           if arm == "orig+z" else data)
+                        old = namespace["fit_sym_fn"](
+                            "lgm_tot_p50", "cond+z" if arm == "orig+z" else arm,
+                            historical_data, seed)
                         new = utils.fit_sym_fn("lgm_tot_p50", arm, data, seed)
                         mats = build_matrices(data, "lgm_tot_p50", arm)
                         idx = np.random.default_rng(seed).choice(
@@ -235,11 +240,66 @@ class SharedFittingTests(unittest.TestCase):
                 all(Path(name).suffix != ".py" for name in manifest["input_hashes"])
             )
 
+    def test_origz_cli_builds_original_latents_and_standard_front_path(self):
+        from sklearn.preprocessing import StandardScaler
+        from wwdc_repro.redshift.frontier import front_path
+        data = frames()
+        # Avoid affine-related cond/orig latents that become identical after scaling.
+        for frame in data.values():
+            frame['cond'] = list(np.stack(frame.orig) ** 2)
+        original_cond = {split: np.stack(frame.cond).copy() for split, frame in data.items()}
+        clean = {split: frame.loc[frame.lgm_tot_p50.notna() & (frame.lgm_tot_p50 != -9999)]
+                 for split, frame in data.items()}
+        scaler = StandardScaler().fit(np.stack(clean['train'].orig))
+
+        def cell(feature, arm, seed, merged, *, threads=8):
+            self.assertEqual((arm, seed), ('orig+z', 42))
+            mats = build_matrices(merged, feature, arm)
+            for split, frame in clean.items():
+                expected = np.column_stack((scaler.transform(np.stack(frame.orig)), frame.z_x))
+                np.testing.assert_array_equal(mats[f'X_{split}'], expected)
+                np.testing.assert_array_equal(np.stack(merged[split].cond), original_cond[split])
+            return pd.DataFrame([{'Feature': feature, 'Equation': 'X11'}]), {'Feature': feature}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            argv = ['run_total_mass', '--embed-type', 'orig+z', '--seed', '42', '--out', tmp, '--embeddings', tmp]
+            for split in ('train', 'val', 'test'):
+                (Path(tmp) / split).mkdir()
+                (Path(tmp) / split / 'data.parquet').touch()
+            with patch.object(sys, 'argv', argv), \
+                 patch.object(run_total_mass, 'build_merged', return_value=data), \
+                 patch.object(run_total_mass, 'input_hashes', return_value={}), \
+                 patch.object(run_total_mass, 'run_cell', side_effect=cell) as fit:
+                run_total_mass.main()
+            fit.assert_called_once()
+            self.assertTrue(front_path(Path(tmp), 'orig+z', 42).is_file())
+
+    def test_joint_cli_appends_only_norm_and_keeps_distinct_front_name(self):
+        data = frames()
+        for frame in data.values():
+            frame['y'] = list(np.column_stack((frame.z_x, np.arange(len(frame)) + 10.)))
+        def cell(feature, arm, seed, merged, *, threads):
+            for frame in merged.values():
+                self.assertEqual(np.stack(frame.cond).shape[1], 11)
+                np.testing.assert_array_equal(np.stack(frame.cond)[:, -1], np.stack(frame.y)[:, -1])
+            return pd.DataFrame([{'Feature': feature, 'Equation': 'X1'}]), {'Feature': feature}
+        with tempfile.TemporaryDirectory() as tmp:
+            for split in ('train', 'val', 'test'):
+                (Path(tmp) / split).mkdir()
+                (Path(tmp) / split / 'data.parquet').touch()
+            argv = ['run_total_mass', '--conditioning', 'znorm', '--append-norm',
+                    '--embed-type', 'cond+z', '--seed', '42', '--embeddings', tmp, '--out', tmp]
+            with patch.object(sys, 'argv', argv), patch.object(run_total_mass, 'input_hashes', return_value={}), \
+                 patch.object(run_total_mass, 'build_merged', return_value=data), \
+                 patch.object(run_total_mass, 'run_cell', side_effect=cell):
+                run_total_mass.main()
+            self.assertTrue((Path(tmp) / 'job_results_znormflow_condnorm_lgm_tot_p50_cond+z_seed42/pareto_fronts.csv').is_file())
+
     def test_norm_cli_keeps_output_names_without_target_alias(self):
         with tempfile.TemporaryDirectory() as tmp:
             data = frames()
 
-            def cell(feature, arm, seed, merged):
+            def cell(feature, arm, seed, merged, *, threads=8):
                 self.assertEqual(feature, "lgm_tot_p50")
                 self.assertEqual(arm, "cond+z")
                 for split, frame in merged.items():
@@ -253,7 +313,7 @@ class SharedFittingTests(unittest.TestCase):
                 }
 
             argv = [
-                "run_normflow",
+                "run_normflow", "--embeddings", tmp,
                 "--append-norm",
                 "--embed-type",
                 "cond+z",
@@ -262,7 +322,11 @@ class SharedFittingTests(unittest.TestCase):
                 "--out",
                 tmp,
             ]
+            for split in ("train", "val", "test"):
+                (Path(tmp) / split).mkdir(exist_ok=True)
+                (Path(tmp) / split / "data.parquet").touch()
             with (
+                patch.object(run_total_mass, "input_hashes", return_value={}),
                 patch.object(sys, "argv", argv),
                 patch.object(run_total_mass, "build_merged", return_value=data),
                 patch.object(run_total_mass, "run_cell", side_effect=cell),
@@ -275,12 +339,15 @@ class SharedFittingTests(unittest.TestCase):
                 pd.read_csv(output / "pareto_fronts.csv").Feature.iloc[0],
                 "normflow_condnorm_lgm_tot_p50",
             )
+            for split in ("train", "val", "test"):
+                (Path(tmp) / split).mkdir(exist_ok=True)
+                (Path(tmp) / split / "data.parquet").touch()
             with (
+                patch.object(run_total_mass, "input_hashes", return_value={}),
                 patch.object(sys, "argv", argv),
                 patch.object(run_total_mass, "build_merged") as load,
             ):
-                with self.assertRaises(SystemExit):
-                    run_normflow.main()
+                run_normflow.main()
                 load.assert_not_called()
 
 

@@ -5,7 +5,7 @@ import argparse
 
 from wwdc_repro.shared.mlp import run_mlp_experiment
 
-BASE = Path("norm_conditioning_probe_2026-10-18")
+BASE = Path("norm_probe")
 ARMS = ("original", "zflow", "norm")
 
 

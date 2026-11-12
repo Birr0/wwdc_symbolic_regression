@@ -2,11 +2,11 @@
 
 Compare original and redshift-conditioned latents with explicit NORM and redshift
 inputs, matching the NORM-conditioned runs' spectra, targets, training samples,
-and search settings. Select equations by validation R2 at each length budget,
+and search settings. Select equations by training R2 (or optional validation R2) at each length budget,
 freeze the selections, then evaluate their test scores.
 
 Save prepared inputs and per-run equations, candidate audits, selections, and
-run metadata under ``conditioning_validation_2026-10-13/matched_controls/`` by
+run metadata under ``norm_analysis/matched_controls/`` by
 default. The shared fitting functions also support other prepared control inputs.
 
 Usage:
@@ -35,8 +35,10 @@ from wwdc_repro.shared.selection import (
     select_candidate,
 )
 from wwdc_repro.shared.utils import sha256 as digest
+from wwdc_repro.shared.search_runs import search_run, input_hashes, add_search_options
+from wwdc_repro.shared.fitting import search_parameters
 
-BASE = Path("conditioning_validation_2026-10-13")
+BASE = Path("norm_analysis")
 OUT = BASE / "matched_controls"
 
 
@@ -192,7 +194,7 @@ def prepare():
     print(json.dumps(summary, indent=2), flush=True)
 
 
-def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, selection="train"):
+def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, selection="train", threads=8, restart_incomplete=False):
     """Launch shared fitting jobs for each requested representation and seed.
 
     Parameters
@@ -219,7 +221,7 @@ def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, sel
 
     Notes
     -----
-    Jobs with existing completion manifests are skipped. Each process writes
+    Jobs with verified completion records, matching inputs/settings and intact outputs are skipped. Each process writes
     a separate log and limits numerical-library threads to one. Operon retains
     its configured search parallelism. This function does not generate reports.
     """
@@ -228,12 +230,6 @@ def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, sel
 
     def task(pair):
         arm, seed = pair
-        manifest_path = out / f"{arm}_seed{seed}/manifest.json"
-        if manifest_path.exists():
-            saved_policy = json.loads(manifest_path.read_text()).get('selection', 'validation')
-            if saved_policy != selection:
-                raise ValueError(f'{manifest_path}: saved {saved_policy} selection differs from {selection}; use reporting to reselect or a fresh output directory')
-            return
         env = dict(
             os.environ,
             OPENBLAS_NUM_THREADS="1",
@@ -249,11 +245,13 @@ def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, sel
             "--arm",
             arm,
             "--seed",
-            str(seed), "--selection", selection,
+            str(seed), "--selection", selection, "--threads", str(threads),
         ]
+        if restart_incomplete:
+            command.append("--restart-incomplete")
         if prepared_indices:
             command.append("--prepared-indices")
-        with (out / f"{arm}_seed{seed}.log").open("w") as log:
+        with (out / f"{arm}_seed{seed}.log").open("a") as log:
             subprocess.run(
                 command, stdout=log, stderr=subprocess.STDOUT, env=env, check=True
             )
@@ -263,7 +261,26 @@ def run_searches(out, arms, seeds, *, prepared_indices=False, max_workers=2, sel
         list(pool.map(task, pairs))
 
 
-def fit(
+def fit(arm, seed, target="lgm_tot_p50", prepared_indices=False,
+        parameter_overrides=None, selection="train", *, threads=8, restart_incomplete=False):
+    """Run or skip a verified search, using the shared restart policy."""
+    overrides = {"n_threads": threads, **(parameter_overrides or {})}
+    sources = [OUT / f"{arm}_matrices.npz", OUT / f"train_indices_seed{seed}.npy",
+               OUT / f"train_ids_seed{seed}.csv"]
+    if not prepared_indices:
+        sources.append(OUT / f"{arm}_frames.pkl")
+    configuration = dict(arm=arm, seed=seed, target=target, selection=selection,
+                         prepared_indices=prepared_indices,
+                         parameters=search_parameters(seed, overrides), input_hashes=input_hashes(sources))
+    outputs = ('candidate_audit.csv', 'selection_frozen_before_test.csv', 'selected.csv',
+               'front_test_scores.csv', 'manifest.json') # files that must exist for run to be complete
+    with search_run(OUT / f"{arm}_seed{seed}", configuration, outputs,
+                    restart_incomplete=restart_incomplete) as required:
+        if required:
+            _fit(arm, seed, target, prepared_indices, overrides, selection)
+
+
+def _fit(
     arm, seed, target="lgm_tot_p50", prepared_indices=False, parameter_overrides=None, selection="train"
 ):
     """Fit one symbolic search, select equations on validation data, and score tests.
@@ -300,7 +317,6 @@ def fit(
     from wwdc_repro.shared.fitting import fit_sym_fn
 
     dest = OUT / f"{arm}_seed{seed}"
-    dest.mkdir(exist_ok=False)
     mats = np.load(OUT / f"{arm}_matrices.npz")
     idx = np.load(OUT / f"train_indices_seed{seed}.npy")
     started = time.time()
@@ -433,6 +449,7 @@ if __name__ == "__main__":
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--selection", choices=("train", "validation"), default="train")
     ap.add_argument("--prepared-indices", action="store_true")
+    add_search_options(ap)
     args = ap.parse_args()
     OUT = args.out
     if args.stage == "prepare":
@@ -440,4 +457,4 @@ if __name__ == "__main__":
     else:
         if args.arm is None or args.seed is None:
             ap.error("fit requires --arm and --seed")
-        fit(args.arm, args.seed, prepared_indices=args.prepared_indices, selection=args.selection)
+        fit(args.arm, args.seed, prepared_indices=args.prepared_indices, selection=args.selection, threads=args.threads, restart_incomplete=args.restart_incomplete)

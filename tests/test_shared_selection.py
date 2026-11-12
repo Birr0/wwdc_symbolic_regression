@@ -27,6 +27,17 @@ class SharedSelectionTests(unittest.TestCase):
         self.assertEqual(select_candidate(rows, 6).equation, 'train')
         self.assertEqual(select_candidate(rows, 6, selection='validation').equation, 'val')
 
+    def test_report_front_uses_saved_matched_training_indices(self):
+        x = np.array([[1.], [2.], [3.]])
+        data = {'X_train': x, 'y_train': np.array([1., 2., 99.]),
+                'X_test': x[:2], 'y_test': np.array([1., 2.])}
+        audit = pd.DataFrame([{'seed': 42, 'Length': 5, 'equation': 'X1',
+                               'train_r2_stored': 1.}])
+        result = report_front(audit, data, budgets=[5], train_indices={42: np.array([0, 1])})
+        self.assertEqual(result.iloc[0].train_r2, 1.)
+        with self.assertRaisesRegex(ValueError, 'No eligible equations'):
+            report_front(audit, data, budgets=[5])
+
     def test_report_front_retains_training_winner_when_test_fails(self):
         x = np.array([[1.], [2.], [4.]])
         data = {'X_train': x, 'y_train': 1 / x[:, 0],

@@ -174,16 +174,18 @@ def select_candidate(rows: pd.DataFrame, budget: int, *, length_column='length',
                             ascending=[False, True], kind='stable').iloc[0]
 
 
-def report_front(audit, data, *, selection="train", budgets=range(5, 30)):
+def report_front(audit, data, *, selection="train", budgets=range(5, 30), train_indices=None):
     """Re-audit saved front candidates, freeze budget choices, then score on test.
 
-    Uses the search's seeded training subsample. Existing selected equations and
+    Uses saved per-seed training indices when supplied; otherwise reconstructs the
+    seeded random subsample. Existing selected equations and
     test scores in archived tables do not participate in the new choices.
     """
     frozen = []
     for seed, group in audit.groupby('seed', sort=False):
-        indices = np.random.default_rng(int(seed)).choice(
-            len(data['X_train']), min(10000, len(data['X_train'])), replace=False)
+        indices = (train_indices[int(seed)] if train_indices is not None else
+                   np.random.default_rng(int(seed)).choice(
+                       len(data['X_train']), min(10000, len(data['X_train'])), replace=False))
         records = []
         for _, row in group.iterrows():
             checks = audit_candidate(row.equation, data, indices, row.train_r2_stored,

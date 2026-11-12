@@ -129,7 +129,7 @@ Generation arrays permit replotting; they do not establish fresh checkpoint infe
 
 - Original spectra: [Multimodal Universe SDSS pipeline](https://github.com/MultimodalUniverse/MultimodalUniverse/tree/main/scripts/sdss), preserving the author's saved splits.
 - Analysis catalogues: astroML SDSSspecgals DR8 files and SDSS DR8 galSpecExtra, identified by checksums in the code repository.
-- CMD photometry: the pinned VAGC mirror inputs documented in `docs/INPUTS.md`; original crossmatch provenance remains limited as documented there.
+- CMD photometry: the pinned VAGC mirror inputs documented in `README.md`; original crossmatch provenance remains limited as documented there.
 - Pretrained encoder: Spender `sdss_I`, cached as `spender.sdss.paperI-08798cbc.pt`.
 - Flow checkpoints, embeddings and derived analysis products: the WWDC paper workflows.
 

@@ -120,6 +120,8 @@ def front_tables(fronts: Path, outdir: Path, sigfigs: int = 4) -> None:
         frame = pd.read_csv(path)
         if not frame.Seed.eq(seed).all(): # check this is the corresponding seed
             raise ValueError(f"Unexpected seed in {path}")
+        if "Equation_p60" in frame:
+            frame["Equation"] = frame["Equation_p60"]
         finite = np.isfinite(frame.Test_R2) # check R2 is finite
         exclusions.extend(
             {"seed": seed, "length": int(row.Length), "reason": "nonfinite archived Test_R2"}

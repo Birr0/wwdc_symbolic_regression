@@ -1,0 +1,20 @@
+{
+  "directories": {
+    "norm_analysis": "conditioning_validation_2026-10-13",
+    "fibre_mass": "fibre_mass_conditioning_2026-10-14",
+    "norm_ablation": "norm_input_ablation_2026-10-16",
+    "norm_probe": "norm_conditioning_probe_2026-10-18",
+    "norm_cmd": "norm_cmd_full_2026-10-18",
+    "norm_cmd/data": "norm_cmd_s_2026-10-16",
+    "archived_mlp": "mlp_control_2026-10-15"
+  },
+  "mlp_references": {
+    "norm_probe": "norm_conditioning_probe_2026-10-18/mlp/summary.csv",
+    "fibre_mass": "fibre_mass_conditioning_2026-10-14/mlp_control_2026-10-15/summary.csv"
+  },
+  "table_references": [
+    "conditioning_validation_2026-10-13/validation_selected_final.csv",
+    "norm_input_ablation_2026-10-16/summary.csv",
+    "fibre_mass_conditioning_2026-10-14/original_control_comparison/performance.csv"
+  ]
+}

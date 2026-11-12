@@ -3,12 +3,11 @@ from pathlib import Path
 import argparse
 import json
 import pandas as pd
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+from wwdc_repro.shared.paths import working_path, ARCHIVE_PATHS
 
-TABLES = (
-    'conditioning_validation_2026-10-13/validation_selected_final.csv',
-    'norm_input_ablation_2026-10-16/summary.csv',
-    'fibre_mass_conditioning_2026-10-14/original_control_comparison/performance.csv',
-)
+TABLES = ARCHIVE_PATHS['table_references']
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -18,7 +17,7 @@ def main():
     results = []
     for relative in TABLES:
         expected = pd.read_csv(reference/relative)
-        actual = pd.read_csv(args.workdir/relative)
+        actual = pd.read_csv(args.workdir / working_path(relative))
         pd.testing.assert_frame_equal(actual, expected, check_exact=False, rtol=1e-10, atol=1e-12)
         results.append(dict(path=relative, rows=len(actual), agrees=True))
     print(json.dumps(results, indent=2))

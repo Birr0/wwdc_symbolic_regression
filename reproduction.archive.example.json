@@ -1,0 +1,7 @@
+{
+  "embeddings": "/path/to/embeddings/7655991_0",
+  "galspec": "/path/to/galSpecExtra-dr8.fits",
+  "specgals_home": "/path/to/sdss",
+  "conditioning_archive": "/path/to/prepared-conditioning-inputs",
+  "norm_generation": null
+}

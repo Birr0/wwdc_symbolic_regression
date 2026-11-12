@@ -1,7 +1,8 @@
 {
-  "embeddings": "/path/to/embeddings/7655991_0",
-  "galspec": "/path/to/galSpecExtra-dr8.fits",
-  "specgals_home": "/path/to/sdss",
-  "conditioning_archive": "/path/to/prepared-conditioning-inputs",
-  "norm_generation": null
+  "data_root": "/path/to/data",
+  "embeddings": "/path/to/data/sdss_II/spender_I_flow_v2/spender_I_flow_v2/embeddings/7655991_0",
+  "norm_embeddings": "/path/to/data/sdss_II/spender_I_normalisation_flow/embeddings/norm_20261012183217_0",
+  "joint_embeddings": "/path/to/data/sdss_II/spender_I_z_normalisation_flow/embeddings/znorm_20261013104946_0",
+  "cmd_cache": "/path/to/vagc_join.parquet",
+  "norm_generation": "/path/to/saved-norm-sequence"
 }

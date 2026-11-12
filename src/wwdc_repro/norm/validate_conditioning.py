@@ -15,6 +15,10 @@ SPECS = {
     'znorm': ('sdss_II/spender_I_z_normalisation_flow/embeddings/znorm_20261013104946_0', 'znormflow_condnorm_', True),
     'z': ('sdss_II/spender_I_flow_v2/spender_I_flow_v2/embeddings/7655991_0', '', False),
 } # paths embedding datasets and associated equation search results. Boolean is whether to append NORM to the symbolic regression eq.
+for _name in SPECS:
+    _relative, _prefix, _append = SPECS[_name]
+    SPECS[_name] = (os.environ.get(f'WWDC_{_name.upper()}_EMBEDDINGS', _relative), _prefix, _append)
+
 
 
 def select(rows, budget, selection="train"):
@@ -315,7 +319,7 @@ def run(out: Path, selection="train") -> pd.DataFrame:
 def main():
     """Run saved-input validation, optionally rebuilding the raw-data inputs first."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--out', type=Path, default=Path('conditioning_validation_2026-10-13'))
+    parser.add_argument('--out', type=Path, default=Path('norm_analysis'))
     parser.add_argument('--selection', choices=('train', 'validation'), default='train')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--prepare', action='store_true', help='Rebuild raw-data inputs, then validate')

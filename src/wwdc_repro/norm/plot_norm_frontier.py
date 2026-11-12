@@ -13,7 +13,7 @@ from wwdc_repro.shared.figstyle import STYLE
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, default=Path('norm_input_ablation_2026-10-16/selected_all_budgets.csv'))
+    parser.add_argument('--input', type=Path, default=Path('norm_ablation/selected_all_budgets.csv'))
     parser.add_argument('--outdir', type=Path, default=Path('norm_frontier'))
     args = parser.parse_args()
     data = pd.read_csv(args.input) # read the pareto front file
