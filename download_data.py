@@ -35,8 +35,13 @@ def main():
             snapshot_download(release["repo_id"], repo_type="dataset", revision=release["revision"],
                               local_dir=args.outdir, allow_patterns=["release.json", "README.md", *[r["path"] for r in rows]])
             verify(args.outdir, manifest, args.profile)
-            config = write_configuration(args.outdir)
-        print(f"Verified {args.profile} inputs. Run: python3 reproduce.py --config {config}")
+            config = write_configuration(args.outdir, args.profile)
+        if args.profile == "full":
+            print(f"Verified full inputs. Run these stages using the same output directory:")
+            for stage in ("equations", "plots", "tables"):
+                print(f"  python3 reproduce.py {stage} --config {config}")
+        else:
+            print(f"Verified saved inputs. Run: python3 reproduce.py --config {config}")
         if args.profile == "full":
             print(f"Training data root: {args.outdir.resolve() / 'data'}")
     except (OSError, ValueError) as exc:

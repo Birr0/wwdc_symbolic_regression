@@ -117,7 +117,8 @@ Use `download_data.py` in the reproduction repository. Its `saved` profile
 downloads analysis, conditioning and saved generation products; `full` also
 downloads archived spectra, model products and the pretrained Spender cache.
 The downloader pins an immutable HF revision, verifies SHA-256 values and writes
-the input-path file for `python3 reproduce.py`.
+the input-path file: `full` supports `reproduce.py equations`, `plots` and
+`tables`; `saved` supports the historical `python3 reproduce.py` workflow.
 
 The spectra retain the archived 422,481 / 52,810 / 52,811 parent rows and row order.
 Splits separate spectrum IDs; they are not guaranteed to separate physical galaxies.
@@ -129,7 +130,7 @@ Generation arrays permit replotting; they do not establish fresh checkpoint infe
 
 - Original spectra: [Multimodal Universe SDSS pipeline](https://github.com/MultimodalUniverse/MultimodalUniverse/tree/main/scripts/sdss), preserving the author's saved splits.
 - Analysis catalogues: astroML SDSSspecgals DR8 files and SDSS DR8 galSpecExtra, identified by checksums in the code repository.
-- CMD photometry: the pinned VAGC mirror inputs documented in `README.md`; original crossmatch provenance remains limited as documented there.
+- CMD photometry: the pinned NYU VAGC mirror inputs; original crossmatch provenance is limited.
 - Pretrained encoder: Spender `sdss_I`, cached as `spender.sdss.paperI-08798cbc.pt`.
 - Flow checkpoints, embeddings and derived analysis products: the WWDC paper workflows.
 

@@ -46,7 +46,8 @@ def verify(folder, manifest, profile="full"):
     return len(rows)
 
 
-def write_configuration(folder):
+def write_configuration(folder, profile="saved"):
+    """Write paths for fresh stages (full profile) or historical analysis (saved)."""
     folder = folder.resolve()
     config = {
         "embeddings": str(folder / "data" / REDSHIFT / "embeddings/7655991_0"),
@@ -55,6 +56,14 @@ def write_configuration(folder):
         "conditioning_archive": str(folder / "conditioning"),
         "norm_generation": str(folder / "generation"),
     }
+    if profile == "full":
+        config.pop("conditioning_archive")
+        config.update(
+            data_root=str(folder / "data"),
+            norm_embeddings=str(folder / "data/sdss_II/spender_I_normalisation_flow/embeddings/norm_20261012183217_0"),
+            joint_embeddings=str(folder / "data/sdss_II/spender_I_z_normalisation_flow/embeddings/znorm_20261013104946_0"),
+            cmd_cache=str(folder / "conditioning/plot_cmd_latent_results/vagc_join.parquet"),
+        )
     destination = folder / "reproduction.json"
     if destination.exists() and json.loads(destination.read_text()) != config:
         raise ValueError(f"Refusing to replace a different path configuration: {destination}")
@@ -79,4 +88,4 @@ def copy_local_bundle(source, destination, manifest, profile):
             shutil.copy2(source / relative, target)
     shutil.copy2(source / "release.json", destination / "release.json")
     verify(destination, manifest, profile)
-    return write_configuration(destination)
+    return write_configuration(destination, profile)

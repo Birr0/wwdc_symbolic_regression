@@ -1,9 +1,9 @@
 {
-  "status": "prepared_not_uploaded",
+  "status": "published",
   "repo_id": "Birr001/wwdc-symbolic-regression",
-  "revision": null,
+  "revision": "7b03a37c5d5fbb67e75f94d6d88688b6a31b8a31",
   "manifest_sha256": "db9ca34c5581e1e2a2eac47dee6dd57c987bc52d0bf7dc2ddb0807893596015c",
-  "note": "Upload the verified bundle with tools/release_data.py. It records the immutable HF revision here only after successful publication.",
+  "visibility": "public",
   "files": 1423,
   "bytes": 35951408206
 }

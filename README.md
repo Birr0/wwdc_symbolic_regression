@@ -16,9 +16,9 @@ cp reproduction.example.json reproduction.json
 
 ## 2. Get the data
 
-The data bundle is prepared but **not yet published/pinned**. The intended
-Hugging Face dataset is `Birr001/wwdc-symbolic-regression`. Existing local inputs
-can be used now. Once published:
+The data is available on Hugging Face:
+[Birr001/wwdc-symbolic-regression](https://huggingface.co/datasets/Birr001/wwdc-symbolic-regression).
+Download the pinned release and verify its checksums:
 
 ```bash
 uv sync --frozen --extra catalogues
@@ -31,8 +31,15 @@ splits and ordering.
 
 ## 3. Configure paths
 
-Edit the root-level `reproduction.json`. Paths may be absolute or relative to
-that file. The example supplies the expected embedding subdirectories.
+The full downloader generates a configuration with the correct local paths.
+Copy it to the repository root:
+
+```bash
+cp data/paper/reproduction.json reproduction.json
+```
+
+For existing local data, edit the example configuration instead. Paths may be
+absolute or relative to the configuration file.
 
 | Setting | Input |
 |---|---|
@@ -48,8 +55,8 @@ For the downloaded bundle, use `data/paper/data` as `data_root`,
 and `data/paper/generation` as `norm_generation`. Keep the NORM checkpoint YAML
 in its bundled `ckpts/` directory for the scaling statistics.
 
-The downloader currently writes a configuration for the historical archive
-workflow. For the commands below, use `reproduction.example.json` instead.
+The full-profile configuration supports the three commands below. The `saved`
+profile generates a configuration for the historical archive workflow.
 
 ## 4. Run
 

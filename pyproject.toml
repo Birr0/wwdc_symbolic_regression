@@ -20,7 +20,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-catalogues = ["huggingface-hub==1.13.0"]
+catalogues = [
+    "click>=8.1",
+    "huggingface-hub==1.13.0",
+]
 inference = [
   "torch==2.11.0", "torchvision==0.26.0", "lightning==2.6.1",
   "spender==0.2.9", "flow-matching==1.0.10", "datasets==4.8.5",

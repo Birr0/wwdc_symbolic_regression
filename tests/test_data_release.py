@@ -56,6 +56,17 @@ class DataReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different path configuration"):
             copy_local_bundle(self.source, destination, self.manifest, "saved")
 
+    def test_full_download_configuration_supports_fresh_stages(self):
+        from wwdc_repro.workflows.paper_stages import load_config
+        destination = self.home / "full-download"
+        config = copy_local_bundle(self.source, destination, self.manifest, "full")
+        paths = load_config(config)
+        self.assertEqual(paths['data_root'], destination / 'data')
+        self.assertEqual(paths['cmd_cache'], destination / 'conditioning/plot_cmd_latent_results/vagc_join.parquet')
+        self.assertIn('norm_embeddings', paths)
+        self.assertIn('joint_embeddings', paths)
+        self.assertNotIn('conditioning_archive', paths)
+
     def test_duplicate_paths_are_rejected(self):
         self.manifest["files"].append(self.manifest["files"][0].copy())
         with self.assertRaisesRegex(ValueError, "Duplicate"):
