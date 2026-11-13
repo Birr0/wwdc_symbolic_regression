@@ -120,7 +120,7 @@ def plot_cmd(d):
         ticks=np.linspace(-limit, limit, 5),
         format="%.1f",
     )
-    cb1.set_label(r"$\langle S\rangle$ (dimensionless)", fontsize=16)
+    cb1.set_label(r"$\langle S'\rangle$", fontsize=16)
     grid = np.linspace(-24, -18, 200)
     for ax in axes:
         ax.plot(

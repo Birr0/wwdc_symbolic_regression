@@ -44,7 +44,7 @@ from wwdc_repro.shared.utils import sha256 as digest
 from wwdc_repro.shared.paths import ARCHIVE_PATHS, working_path
 WORKFLOWS = {
     'validate_conditioning': 'Recover, audit, freeze training or validation choices and score held-out equations',
-    'rerun_conditioning_exports': 'Recover high-precision NORM equation exports',
+    'rerun_conditioning_exports': 'Archive only: recover old NORM equation exports',
     'matched_conditioning_controls': 'Prepare or fit matched original/z-flow SR controls',
     'norm_input_ablation': 'Section 6: explicit-NORM ablation fits and table',
     'run_total_mass': 'Regenerate redshift-conditioned or original candidate fronts',

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import corner
 import matplotlib.pyplot as plt
-import scienceplots  # Registers the Matplotlib styles.
+from wwdc_repro.shared.figstyle import STYLE
 from matplotlib.lines import Line2D
 import numpy as np
 
@@ -15,7 +15,7 @@ SMOOTH = 1.0
 LEVELS = (.68, .95)
 
 
-@plt.style.context(["science", "no-latex"])
+@plt.style.context(STYLE)
 def latent_corner(orig: np.ndarray, cond: np.ndarray, outdir: Path) -> None:
     """Plot paired original and conditional latent distributions.
 

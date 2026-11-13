@@ -99,8 +99,11 @@ def manifest(args: argparse.Namespace) -> dict:
         "selection": args.selection,
         "tolerance_train_r2": args.tolerance,
         "test_policy": "Evaluate frozen validation selections; report failures without replacement or successful-seeds-only averaging",
-        "recovered_training_scores_sha256": hashlib.sha256(importlib.resources.files(
-            "wwdc_repro.resources").joinpath("recovered_training_scores.json").read_bytes()).hexdigest(),
+        "recovered_training_scores_sha256": (
+            None if getattr(args, "fresh_fronts", False) else
+            hashlib.sha256(importlib.resources.files("wwdc_repro.resources").joinpath(
+                "recovered_training_scores.json").read_bytes()).hexdigest()
+        ),
         "code": [
             {"file": str(p.relative_to(Path(__file__).parents[1])), "sha256": sha256(p)}
             for p in sorted(Path(__file__).parents[1].rglob("*.py"))

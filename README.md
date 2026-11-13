@@ -1,16 +1,37 @@
 # WWDC symbolic regression
 
-Reproduce the paper from saved galaxy embeddings:
-**get data → configure paths → run equations → generate plots and tables**.
-Flow training and embedding generation are documented separately in
+This code is designed to produce equations from galaxy embeddings. We condition the embeddings in order to control them and
+fit symbolic regression models to discover underlying forms.
+
+The code follows these steps:
+1. Get data.
+2. Configure paths to data
+3. Run equations.
+4. Generate plots and tables.
+
+The flow training and embedding generation are documented separately in
 [wwdc_spectra](https://github.com/Birr0/wwdc_spectra).
 
 ## 1. Install
+Firstly, clone the repo:
+```bash
+git clone https://github.com/Birr0/wwdc_symbolic_regression.git
+cd wwdc_symbolic_regression
+```
 
-Use Python 3.12 and [uv](https://docs.astral.sh/uv/). From this repository:
+Use Python 3.12 and [uv](https://docs.astral.sh/uv/) to install the package and
+its dependencies. If `uv` is not already installed, install it with:
 
 ```bash
-uv sync --frozen
+python -m pip install uv
+```
+
+From the repository root (the directory containing `pyproject.toml` and
+`uv.lock`), run:
+
+```bash
+uv sync --frozen --python 3.12 --extra catalogues
+source .venv/bin/activate
 cp reproduction.example.json reproduction.json
 ```
 
@@ -21,7 +42,6 @@ The data is available on Hugging Face:
 Download the pinned release and verify its checksums:
 
 ```bash
-uv sync --frozen --extra catalogues
 uv run --frozen --extra catalogues python download_data.py --profile full
 ```
 
@@ -62,26 +82,32 @@ profile generates a configuration for the historical archive workflow.
 
 ```bash
 # Check inputs and print the plan without launching searches.
-python reproduce.py equations --check
+python reproduce.py equations --selection validation --check
 
 # Fit the symbolic equations and MLP comparisons required by the tables.
-python reproduce.py equations --threads 8
+python reproduce.py equations --selection validation --threads 8
 
 # Generate figures and tables from the completed run; no model fitting.
-python reproduce.py plots
-python reproduce.py tables
+python reproduce.py plots --selection validation
+python reproduce.py tables --selection validation
 ```
 
 The equation stage prepares inputs, runs 51 symbolic searches, selects equations
-using training scores by default, evaluates them on test, and fits the MLP
+using validation scores with these commands, evaluates them on test, and fits the MLP
 comparisons. Local searches run sequentially, with eight Operon threads per
 search in this example. Plotting requires both the CMD cache and saved spectral
 arrays. Plots and tables use this run's results, not substituted archived scores.
 
+Fresh searches save full-precision equations directly, so no precision-recovery
+rerun is needed. Exported equations are still checked against native training
+scores; rounded table equations are for presentation. Recovery tools are retained
+only for the historical archive workflow.
+
 All commands default to `reproduction.json` and `outputs/paper`. To change these,
 pass `--config FILE` and `--outdir DIR` consistently to all three commands.
-Optional `--selection validation` retains validation-based selection; use the
-same selection policy throughout.
+The manuscript selects equations by validation performance and reports their test
+scores. Use `--selection validation` consistently for all stages. Training-based
+selection remains available with `--selection train` (the CLI default).
 
 ## 5. Check the results
 
@@ -93,9 +119,29 @@ same selection policy throughout.
 | Logs | `outputs/paper/logs/` |
 | Stage completion records | `outputs/paper/equations.json`, `plots.json`, `tables.json` |
 
-Inspect the figures, failed/nonfinite scores and equation interpretations before
-updating the manuscript. The full fresh rerun is pending; the NORM analytic-family
-parameter table still needs scientific reconciliation with the generated equations.
+Inspect the figures, nonfinite scores and equation interpretations before updating
+the manuscript. The NORM physical-unit coefficient table is generated from the
+full-precision equations and saved training scaling.
+
+## Update the manuscript assets
+
+After completing the validation-selected run above, export figures and formatted tables
+into an unpacked Overleaf project containing `draft.tex`:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m tools.export_manuscript \
+  --run outputs/paper \
+  --project ../pre-submission/WWDC_Symbolic_Regression
+```
+
+The manuscript uses `figures/` and `\input{tables/...}`. Re-exporting updates the
+generated assets without editing numerical table rows in `draft.tex`. The NORM
+physical-unit coefficient table is derived from the precise equations and saved
+training scaling; exports stop if the equations no longer match its stated family.
+Scientific prose still requires author review. The exporter requires validation
+selection. For the existing two-directory workflow, use `--fresh DIR` and
+`--validation DIR` instead of `--run`; this also checks that reused CMD/anatomy
+figures use unchanged equations.
 
 ## Restarting
 
@@ -103,7 +149,7 @@ Repeated commands skip verified completed work. After fixing an interrupted
 step, preserve its previous attempt and restart it with:
 
 ```bash
-python reproduce.py equations --threads 8 --restart-incomplete
+python reproduce.py equations --selection validation --threads 8 --restart-incomplete
 ```
 
 Use `plots` or `tables` for those stages. Restarting begins the incomplete step

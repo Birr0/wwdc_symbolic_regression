@@ -13,6 +13,25 @@ from wwdc_repro.redshift.frontier import select_by_budget, evaluate_selected, cu
 
 
 class SelectionTests(unittest.TestCase):
+    def test_display_fallback_uses_best_lower_budget_without_changing_selection(self):
+        from wwdc_repro.redshift.figures import frontier_display
+
+        selected = pd.DataFrame({
+            "arm": ["orig"] * 6, "seed": [42] * 5 + [43],
+            "budget": [5, 6, 7, 8, 9, 8], "chosen_length": [5, 6, 7, 8, 9, 8],
+            "test_r2": [.8, .7, np.nan, np.inf, .95, np.nan],
+        })
+        original = selected.copy(deep=True)
+        display = frontier_display(selected)
+        pd.testing.assert_frame_equal(selected, original)
+        for index in (2, 3):
+            self.assertEqual(display.loc[index, "display_r2"], .8)
+            self.assertEqual(display.loc[index, "fallback_budget"], 5)
+            self.assertTrue(display.loc[index, "display_fallback"])
+        self.assertTrue(np.isnan(display.loc[5, "display_r2"]))
+        self.assertFalse(display.loc[5, "display_fallback"])
+        self.assertEqual(display.loc[1, "display_r2"], .7)
+
     def test_recovered_training_score_overrides_ambiguous_flag_without_test_access(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

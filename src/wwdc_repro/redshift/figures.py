@@ -17,7 +17,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from wwdc_repro.shared.utils import sha256
 from wwdc_repro.shared.data import clean_target, load_sample, matrices, sample_summary
@@ -80,12 +79,9 @@ def selected_l24(selected: pd.DataFrame, seed: int) -> str:
         raise ValueError(f"Expected one selected budget-24 cond+z equation for seed {seed}")
     return row.iloc[0].equation
 
+@plt.style.context(STYLE)
 def latent_figure(frame: pd.DataFrame, outdir: Path) -> None:
-    """Plot the test-sample latent corner figure and histograms.
-
-    The corner plot is used in the appendix (Figure 9). A second figure shows
-    original and conditional histograms for each of the ten latent dimensions,
-    overlaid with the standard-normal density.
+    """Plot the paired test-sample latent corner figure used in the appendix.
 
     Parameters
     ----------
@@ -95,8 +91,7 @@ def latent_figure(frame: pd.DataFrame, outdir: Path) -> None:
         the sample against reference IDs before calling this function.
     outdir : Path
         Existing output directory. Saves latent_sample_ids.csv, the corner
-        plot and its metadata via latent_corner, and latent_dim_distributions
-        as PNG/PDF figures with a JSON statistics file.
+        plot and its metadata via latent_corner.
 
     Returns
     -------
@@ -108,10 +103,6 @@ def latent_figure(frame: pd.DataFrame, outdir: Path) -> None:
         If embedding arrays cannot be stacked, have unexpected or mismatched
         shapes, or contain nonfinite values.
 
-    Notes
-    -----
-    Diagnostic histograms use 60 bins over [-5, 5] and normalize within that
-    range. Recorded means and standard deviations use all supplied rows.
     """
     # Record the sample IDs; main() has already checked them against the reference.
 
@@ -126,48 +117,6 @@ def latent_figure(frame: pd.DataFrame, outdir: Path) -> None:
     from wwdc_repro.redshift.latent_corner import latent_corner
 
     latent_corner(orig, cond, outdir)  # Save the corner plot and its metadata.
-
-    # Create a separate histogram-only diagnostic figure, outside the paper figures.
-    grid, edges = np.linspace(-5, 5, 600), np.linspace(-5, 5, 61)
-    normal = stats.norm.pdf(grid)
-    fig, axes = plt.subplots(5, 2, figsize=(10, 13), constrained_layout=True)
-    summary = {
-        "split": "test",
-        "rows": len(frame),
-        "bins": 60,
-        "histogram_range": [-5, 5],
-        "dimensions": [],
-    }
-    
-    for i, ax in enumerate(axes.flat):
-        ax.hist(orig[:, i], bins=edges, density=True, color="#1261a6", label="Original")
-        ax.hist(
-            cond[:, i],
-            bins=edges,
-            density=True,
-            color="#46c57a",
-            alpha=0.72,
-            label="Conditional",
-        )
-        ax.plot(grid, normal, color="red", lw=1.6, label=r"$\mathcal{N}(0,1)$")
-        ax.set(
-            title=f"Dimension {i + 1}", xlabel="Value", ylabel="Density", xlim=(-5, 5)
-        )
-        summary["dimensions"].append(
-            {
-                "dimension": i + 1,
-                "original_mean": float(orig[:, i].mean()),
-                "original_sd": float(orig[:, i].std()),
-                "conditional_mean": float(cond[:, i].mean()),
-                "conditional_sd": float(cond[:, i].std()),
-            }
-        )
-    axes.flat[-1].legend(loc="upper right", fontsize=8)
-    save(fig, outdir / "latent_dim_distributions")
-    (outdir / "latent_dim_distributions.json").write_text(
-        json.dumps(summary, indent=2) + "\n"
-    )
-
 
 def _frontier_axes(ax, lo: float, hi: float, top: float) -> None:
     '''
@@ -190,7 +139,7 @@ def _frontier_axes(ax, lo: float, hi: float, top: float) -> None:
     '''
     ax.set_xlim(lo - 0.8, hi + 0.8)
     ax.set_ylim(0.0, top + 0.05)
-    ax.set_xlabel("maximum equation length", fontsize=13)
+    ax.set_xlabel("Maximum equation length", fontsize=13)
     tidy(ax, grid_axis=None, labelsize=11)
 
 @plt.style.context(STYLE)
@@ -239,7 +188,7 @@ def paper_frontier(selected: pd.DataFrame, outdir: Path) -> None:
         _frontier_markers(ax, c.budget, c["mean"], c.fallback_count > 0, ARM_COLOUR[arm])
     _frontier_axes(ax, summary.budget.min(), summary.budget.max(), summary.high.max()) # format axes of plot
     ax.set_ylabel("$R^2$", fontsize=13)
-    frontier_legend(ax)
+    frontier_legend(ax, fontsize=9.5)
     fig.tight_layout()
 
     # Save the figure, display data, and original selected-score summary.
@@ -253,12 +202,24 @@ def paper_frontier(selected: pd.DataFrame, outdir: Path) -> None:
 
 
 def frontier_display(selected: pd.DataFrame) -> pd.DataFrame:
-    """Plot the frozen choices directly; failed test evaluations remain gaps."""
+    """Fill failed display scores with the best finite test score at a lower budget.
+
+    This is a test-informed display fallback, not equation selection. Preserve
+    the frozen equations and test_r2, and mark every substituted display value.
+    """
     display = selected.copy()
     display['display_r2'] = display.test_r2.where(np.isfinite(display.test_r2))
     display['display_fallback'] = False
     display['fallback_budget'] = np.nan
     display['fallback_length'] = np.nan
+    for _, group in display.groupby(["arm", "seed"]):
+        for index, row in group[~np.isfinite(group.test_r2)].iterrows():
+            pool = group[(group.budget < row.budget) & np.isfinite(group.test_r2)]
+            if pool.empty:
+                continue
+            best = pool.sort_values(["test_r2", "budget"], ascending=[False, True]).iloc[0]
+            display.loc[index, ["display_r2", "display_fallback", "fallback_budget", "fallback_length"]] = [
+                best.test_r2, True, best.budget, best.chosen_length]
     return display
 
 

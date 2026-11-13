@@ -85,11 +85,10 @@ def score_fronts(
     -----
     The bundled recovery JSON supplies independent training-score references
     where archived Train_R2 values are nonfinite; it does not supply predictions.
-    TODO: Review replacing this runtime lookup with documented corrections to
-    the saved front files."""
-    recovered = json.loads(importlib.resources.files("wwdc_repro.resources").joinpath(
-        "recovered_training_scores.json").read_text())
-    recovery = {(r["arm"], r["seed"], r["length"]): r for r in recovered["candidates"]}
+    Fresh fronts supply their own native training scores and precise equations;
+    the archive recovery JSON is loaded only if a training score is nonfinite.
+    """
+    recovery = None
     records = []
     for arm in ARMS:
         data = matrices(frames, arm, target)
@@ -107,8 +106,14 @@ def score_fronts(
             ) # Sample up to 10,000 distinct training-row indices.
             for row in raw.itertuples():
                 reference_train = float(row.Train_R2)
-                reference_source = "archived independent finite training score"
+                reference_source = "saved native training score"
                 if not np.isfinite(reference_train):
+                    if recovery is None:
+                        recovered = json.loads(importlib.resources.files(
+                            "wwdc_repro.resources").joinpath(
+                            "recovered_training_scores.json").read_text())
+                        recovery = {(r["arm"], r["seed"], r["length"]): r
+                                    for r in recovered["candidates"]}
                     key = (arm, seed, int(row.Length))
                     if key not in recovery:
                         raise ValueError(f"Missing independent training reference for {key}")

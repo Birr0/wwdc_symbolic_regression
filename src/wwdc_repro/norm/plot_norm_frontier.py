@@ -48,7 +48,7 @@ def main():
         ax.fill_between(c.budget, c.low, c.high, color=colour, alpha=.18, linewidth=0)
         ax.plot(c.budget, c['mean'], color=colour, ls=linestyle, lw=1.6,
                 marker='o', ms=2.7, label=label) # plot mean value across seeds for the given eq. budget
-    ax.set(xlim=(4.2, 29.8), ylim=(0, 1), xlabel='Maximum equation length', ylabel=r'Test $R^2$')
+    ax.set(xlim=(4.2, 29.8), ylim=(0, 1), xlabel='Maximum equation length', ylabel=r'$R^2$')
     ax.xaxis.label.set_size(14); ax.yaxis.label.set_size(14)
     ax.tick_params(labelsize=12)
     ax.legend(loc='lower right', fontsize=10, frameon=False)

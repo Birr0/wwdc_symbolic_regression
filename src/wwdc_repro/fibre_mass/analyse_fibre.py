@@ -2,6 +2,7 @@
 
 import argparse
 import json
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import sympy as sp
@@ -16,10 +17,12 @@ DEST = OUT / "original_control_comparison"
 
 
 def main():
-    DEST.mkdir(exist_ok=True)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--selection', choices=('train', 'validation'), default='train')
+    parser.add_argument('--outdir', type=Path, default=DEST,
+                        help='Destination for the selected equations and performance summary')
     args = parser.parse_args()
+    args.outdir.mkdir(parents=True, exist_ok=True)
     selections = []
     train_indices = {seed: np.load(OUT / f"train_indices_seed{seed}.npy")
                      for seed in (42, 43, 44)}
@@ -36,7 +39,7 @@ def main():
             selections.append(report_front(pd.concat(audits, ignore_index=True), data,
                                            selection=args.selection, train_indices=train_indices))
     combined = pd.concat(selections, ignore_index=True)
-    combined.to_csv(DEST / 'selected.csv', index=False)
+    combined.to_csv(args.outdir / 'selected.csv', index=False)
     mats = np.load(OUT / "original_matrices.npz") # load the saved matrices.
     combined["test_rmse"] = np.sqrt((1 - combined.test_r2) * np.var(mats["y_test"])) 
     combined["validation_rmse"] = np.sqrt((1 - combined.val_r2) * np.var(mats["y_val"])) # compute rmse for each val and test
@@ -57,7 +60,7 @@ def main():
     complete = combined.groupby(["arm", "budget"]).test_r2.apply(lambda v: len(v) == 3 and np.isfinite(v).all()).to_numpy()
     summary.loc[~complete, ["test_r2", "test_rmse", "min_r2", "max_r2"]] = np.nan
     summary["selection"] = args.selection
-    summary.to_csv(DEST / "performance.csv", index=False)
+    summary.to_csv(args.outdir / "performance.csv", index=False)
     # Report the latent structure of the equations
     structure = []
     for arm in ("original", "norm"):

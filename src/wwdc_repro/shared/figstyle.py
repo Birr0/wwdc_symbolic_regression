@@ -60,20 +60,22 @@ ARM_LABEL = {
 }
 
 
-def frontier_legend(ax) -> None:
+def frontier_legend(ax, fontsize=7.5) -> None:
     '''
     Format the legend of the frontier plot
     
     Parameters
     ----------
     ax:  matplotlib.axes.Axes
+    fontsize : float
+        Legend text size in points.
 
     Returns
     -------
     None
     '''
     leg = ax.legend(
-        loc="lower right", ncol=2, frameon=True, fontsize=7.5, handlelength=1.8,
+        loc="lower right", ncol=2, frameon=True, fontsize=fontsize, handlelength=1.8,
         borderpad=0.5, labelspacing=0.4, columnspacing=1.2,
     )
     frame = leg.get_frame()

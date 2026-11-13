@@ -112,7 +112,13 @@ def run(selection="train", *, threads=8, max_workers=2, restart_incomplete=False
     compare_results(selection=selection)
 
 
-def compare_results(selection="train"):
+def compare_results(selection="train", *, outdir=None):
+    """Rescore saved candidates and write summaries without rerunning searches.
+
+    ``outdir`` separates alternative selections from the original run products.
+    """
+    destination = OUT if outdir is None else Path(outdir)
+    destination.mkdir(parents=True, exist_ok=True)
     rows = []
     sources = load_results(arms=ARMS)
     for arm in ARMS:
@@ -130,7 +136,7 @@ def compare_results(selection="train"):
             selected['validation_rmse'] = np.sqrt((1 - selected.val_r2) * np.var(mats['y_val']))
             rows.append(selected) # add selected row
     allrows = pd.concat(rows, ignore_index=True) # combine all four arms into a common data frame
-    allrows.to_csv(OUT / 'selected_all_budgets.csv', index=False)
+    allrows.to_csv(destination / 'selected_all_budgets.csv', index=False)
     summary = allrows.groupby(['arm', 'with_norm', 'budget']).agg(
         test_r2=('test_r2', 'mean'), test_r2_sd=('test_r2', 'std'),
         test_rmse=('test_rmse', 'mean'), validation_r2=('val_r2', 'mean'),
@@ -139,7 +145,7 @@ def compare_results(selection="train"):
     complete = allrows.groupby(['arm', 'with_norm', 'budget']).test_r2.apply(lambda v: len(v) == 3 and np.isfinite(v).all()).to_numpy()
     summary.loc[~complete, ['test_r2', 'test_r2_sd', 'test_rmse']] = np.nan
     summary['selection'] = selection
-    summary.to_csv(OUT / 'summary.csv', index=False)
+    summary.to_csv(destination / 'summary.csv', index=False)
     print(summary[summary.budget.isin([15, 29])].to_string(index=False), flush=True)
 
 
@@ -149,6 +155,7 @@ if __name__ == '__main__':
     ap.add_argument('--arm', choices=ARMS)
     ap.add_argument('--seed', type=int, choices=SEEDS)
     ap.add_argument('--selection', choices=('train', 'validation'), default='train')
+    ap.add_argument('--outdir', type=Path, help='Output directory for compare_results')
     add_search_options(ap)
     ap.add_argument("--workers", type=positive_int, default=2, help="Concurrent local searches (run stage)")
     args = ap.parse_args()
@@ -162,4 +169,4 @@ if __name__ == '__main__':
     elif args.stage == "run":
         run(selection=args.selection, threads=args.threads, max_workers=args.workers, restart_incomplete=args.restart_incomplete)
     else:
-        compare_results(selection=args.selection)
+        compare_results(selection=args.selection, outdir=args.outdir)

@@ -71,6 +71,31 @@ def frames():
 
 
 class SharedFittingTests(unittest.TestCase):
+    def test_original_redshift_baseline_uses_original_latents(self):
+        from sklearn.linear_model import LinearRegression
+        from sklearn.preprocessing import StandardScaler
+
+        data = frames()
+        for frame in data.values():
+            frame["cond"] = list(np.stack(frame.orig) ** 2)
+        estimator = LinearRegression()
+        result = utils.fit_model_fn(
+            "lgm_tot_p50", "orig+z", estimator, data
+        )
+        raw = {
+            split: np.column_stack((np.stack(frame.orig)[2:], frame.z_x.to_numpy()[2:]))
+            for split, frame in data.items()
+        }
+        scaler = StandardScaler().fit(raw["train"])
+        expected = LinearRegression().fit(
+            scaler.transform(raw["train"]), data["train"].lgm_tot_p50.to_numpy()[2:]
+        )
+        np.testing.assert_allclose(estimator.coef_, expected.coef_)
+        self.assertAlmostEqual(
+            result["Test_R2"],
+            expected.score(scaler.transform(raw["test"]), data["test"].lgm_tot_p50.to_numpy()[2:]),
+        )
+
     def test_front_exports_precise_equation_and_keeps_train_score_when_test_fails(self):
         train = np.arange(4.).reshape(-1, 1)
         test = np.array([[np.nan]])

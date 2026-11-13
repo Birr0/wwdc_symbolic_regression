@@ -34,6 +34,14 @@ def join_photometry(rows, cache, *, validate="one_to_one", magnitude_shift=None)
     result = result.copy()
     result["gr"] = result.ABSMAG_g - result.ABSMAG_r
     if magnitude_shift is None:
+        # kcorrect FAQ: "kcorrect assumes h=1. How do I change that?"
+        # https://kcorrect.org/ (Frequently Asked Questions)
+        # M(h) = M(h=1) + 5*log10(h). At h=0.7 the shift is -0.7745098 mag.
+        # Compute the equivalent distance-modulus difference with Astropy:
+        # M_70 - M_100 = DM_100 - DM_70, keeping Omega_m fixed.
+        # Lower H0 puts a galaxy at a larger distance for the same redshift.
+        # Since M = m - DM, its absolute magnitude becomes more negative.
+        # Both bands receive the same shift, so g-r above is unchanged.
         catalogue = FlatLambdaCDM(H0=100, Om0=0.3, Tcmb0=0)
         plot = FlatLambdaCDM(H0=70, Om0=0.3, Tcmb0=0)
         magnitude_shift = (catalogue.distmod(result.z.to_numpy())

@@ -1,4 +1,6 @@
-"""Rerun the two seed-42 NORM searches to recover precise equation exports.
+"""Archive-only recovery of precise exports for the two old seed-42 NORM searches.
+
+Fresh equation runs export precise expressions directly and do not use this tool.
 
 Append the saved NORM conditioning coordinate to the conditional latents and
 rerun the cond and cond+z arms with the shared symbolic fitter. For every Pareto

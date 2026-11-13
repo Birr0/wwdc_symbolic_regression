@@ -151,7 +151,7 @@ def front_tables(fronts: Path, outdir: Path, sigfigs: int = 4) -> None:
             records.append({"seed": seed, "length": int(row.Length),
                             "test_r2": float(row.Test_R2), "equation": row.Equation,
                             "latex": body, "stored_precision_warning": lost})
-        lines.extend([r"\bottomrule", r"\end{longtable}"])
+        lines.extend([r"\bottomrule", r"\end{longtable}", r"\addtocounter{table}{-1}"])
         if flagged:
             lines.append(r"$\ddagger$: Stored coefficient precision loses a term; the reported $R^2$ refers to the original fitted expression.")
         if seed != SEEDS[-1]:

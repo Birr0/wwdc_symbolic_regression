@@ -136,7 +136,7 @@ def build_steps(stage, paths, out, *, selection='train', threads=8, restart=Fals
         add('fit-fibre-mlp', 'wwdc_repro.fibre_mass.fibre_mass_mlp_control', products=['fibre_mass/mlp_sklearn/*.csv'], owned=['fibre_mass/mlp_sklearn'])
     else:
         destination = out / ('figures/redshift' if stage == 'plots' else 'tables/redshift')
-        only = ['frontier', 'seed-frontiers', 'latent', 'anatomy', 'cmd'] if stage == 'plots' else ['weights', 'front-tables', 'diagnostic-tables']
+        only = ['frontier', 'seed-frontiers', 'latent', 'anatomy', 'zero-latent', 'cmd'] if stage == 'plots' else ['weights', 'front-tables', 'diagnostic-tables']
         add(f'{stage}-redshift', 'wwdc_repro.redshift.figures', [*common, '--selected', str(out / 'work/redshift/analysis/selected.csv'),
             '--fronts', str(work), '--outdir', str(destination), '--only', *only,
             *(['--cmd-cache', str(paths['cmd_cache'])] if stage == 'plots' else [])],

@@ -172,9 +172,10 @@ def fit_model_fn(feature, embed_type, estimator, merged_dfs):
         train_clean = train_clean[train_clean[feature] > 0]
         test_clean = test_clean[test_clean[feature] > 0]
 
-    if embed_type == "cond+z":
-        X_train = np.stack(train_clean["cond"].values)
-        X_test = np.stack(test_clean["cond"].values)
+    if embed_type in ("cond+z", "orig+z"):
+        column = embed_type.removesuffix("+z")
+        X_train = np.stack(train_clean[column].values)
+        X_test = np.stack(test_clean[column].values)
         y_train = train_clean[feature].values
         y_test = test_clean[feature].values
 

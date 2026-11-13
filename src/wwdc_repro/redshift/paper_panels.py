@@ -185,7 +185,7 @@ def anatomy(frames, selected, outdir: Path, equation_for_seed):
     _anatomy_legend(axes[0])
     axes[0].set_ylabel(r"$\log_{10}(M_\star/M_\odot)$ [dex]", fontsize=14)
     colorbar = fig.colorbar(sc, ax=axes, fraction=0.020, pad=0.012)
-    colorbar.set_label("$s$", fontsize=13)
+    colorbar.set_label("$s$", fontsize=18)
     colorbar.ax.tick_params(labelsize=12)
     colorbar.solids.set_alpha(1.0)
     # Save plots, curve values, and diagnostics.
@@ -199,6 +199,7 @@ def anatomy(frames, selected, outdir: Path, equation_for_seed):
     )
 
 
+@plt.style.context(STYLE)
 def zero_latent(frames, fronts: Path, outdir: Path, save):
     """Plot Figure 2: zero-latent equation curves and deviations from observed means.
 
@@ -206,8 +207,7 @@ def zero_latent(frames, fronts: Path, outdir: Path, save):
     across seeds and lengths. Simplify the reductions to six significant digits
     and evaluate them over redshift. The top panel overlays these curves on the
     test-sample mass distribution and its binned mean log mass. The lower panel
-    shows predictions minus the interpolated observed mean. Pointwise median
-    equation curves are also currently shown for each arm.
+    shows predictions minus the interpolated observed mean.
 
     Parameters
     ----------
@@ -218,8 +218,8 @@ def zero_latent(frames, fronts: Path, outdir: Path, save):
         Root directory containing saved Pareto-front CSV files for each arm and
         seed. Uses archived equations, not just validation-selected equations.
     outdir : Path
-        Existing directory for zero_latent.png/.pdf, zero_latent.csv (median
-        curves, observed means, and deviations), and zero_latent_exclusions.json.
+        Existing directory for zero_latent.png/.pdf, zero_latent.csv (individual
+        curves with seed/length, observed means, and deviations), and zero_latent_exclusions.json.
     save : Callable
         Function accepting a Matplotlib Figure and an output Path stem. Saves
         PNG/PDF files and closes the figure; supplied by figures.py.
@@ -305,7 +305,7 @@ def zero_latent(frames, fronts: Path, outdir: Path, save):
                         }
                     )
                     continue
-                bundle.append((row.Length, values)) # add equation length and predicted values to the bundle
+                bundle.append((seed, row.Length, values)) # add equation length and predicted values to the bundle
         if not bundle:
             raise ValueError(f"No finite zero-latent reductions for {arm}")
         bundles[arm] = bundle # save bundle to correct arm
@@ -320,59 +320,54 @@ def zero_latent(frames, fronts: Path, outdir: Path, save):
     _, _, _, density = axes[0].hist2d(
         z, mass, bins=[120, 120], cmap="Greys", cmin=1, alpha=0.55
     ) # plot the density of mass values across redshift.
-    fig.colorbar(
+    density_bar = fig.colorbar(
         density, ax=axes[0], location="top", label="Spectra per bin",
         fraction=0.06, pad=0.04,
     ) # add colour bar for the density of mass values.
-    all_lengths = [length for bundle in bundles.values() for length, _ in bundle]
+    density_bar.ax.xaxis.label.set_size(14)
+    density_bar.ax.tick_params(labelsize=12)
+    all_lengths = [length for bundle in bundles.values() for _, length, _ in bundle]
     norm = Normalize(min(all_lengths), max(all_lengths)) # provide a colour scale for the equation lengths
-    medians = []
     ramps = {
         "cond+z": ["#7babe6", "#276fc5", "#17406f"], # blue shades for cond+z
         "orig+z": ["#c3718f", "#901944", "#550e27"], # red shades for orig+z
     }
     for arm in ("cond+z", "orig+z"):
         cmap = LinearSegmentedColormap.from_list(arm, ramps[arm]) # create a continuous colour gradient for each arm
-        for length, values in bundles[arm]:
+        for seed, length, values in bundles[arm]:
+            all_records.extend(
+                {"arm": arm, "seed": seed, "length": length, "z": zi,
+                 "prediction": value, "empirical_mean": obs, "deviation": value - obs}
+                for zi, value, obs in zip(grid, values, observed, strict=True)
+            )
             colour = cmap(norm(length))
             axes[0].plot(grid, values, color=colour, lw=0.8, alpha=0.8) # plot the zero latent prediction
             axes[1].plot(grid, values - observed, color=colour, lw=0.8, alpha=0.8) # plot the residual of the zero latent prediction from the observed mean.
-        # TODO: Remove the thick median curves; retain individual equations and the
-        # observed mean. Also revise the median-dependent y-limits and CSV output.
-        median = np.median([values for _, values in bundles[arm]], axis=0)
-        medians.append(median)
-        for ax, values in zip(axes, (median, median - observed), strict=True):
-            ax.plot(grid, values, color=cmap(0.8), lw=2.4, label=f"{arm} median")
-        fig.colorbar(
+        colorbar = fig.colorbar(
             ScalarMappable(norm=norm, cmap=cmap),
             ax=axes,
             label=f"{arm}: length",
             fraction=0.025,
             pad=0.02,
         )
-        all_records.extend(
-            {
-                "arm": arm,
-                "z": zi,
-                "median_curve": mu,
-                "empirical_mean": obs,
-                "deviation": mu - obs,
-            }
-            for zi, mu, obs in zip(grid, median, observed, strict=True)
-        )
+        colorbar.ax.yaxis.label.set_size(14)
+        colorbar.ax.tick_params(labelsize=12)
     axes[0].plot(centres[good], means[good], "k--", lw=2, label="observed binned mean")
-    lo, hi = (
-        min(v.min() for v in [*medians, observed]),
-        max(v.max() for v in [*medians, observed]),
-    )
+    # Frame all displayed equation curves and the observed mean.
+    curves = [observed, *[values for bundle in bundles.values() for _, _, values in bundle]]
+    lo, hi = min(v.min() for v in curves), max(v.max() for v in curves)
     axes[0].set(
         ylim=(lo - 0.12 * (hi - lo), hi + 0.12 * (hi - lo)), ylabel=r"$\log_{10}(M_\star/M_\odot)$ [dex]"
     )
-    axes[0].legend(fontsize=8)
+    axes[0].legend(fontsize=11)
     axes[1].axhline(0, color="black", ls="--")
     axes[1].set(
-        xlim=(0.02, 0.3), xlabel="redshift", ylabel="prediction − observed mean [dex]"
+        xlim=(0.02, 0.3), xlabel="$z$", ylabel=r"$\Delta$"
     )
+    for ax in axes:
+        ax.xaxis.label.set_size(16)
+        ax.yaxis.label.set_size(16)
+        ax.tick_params(labelsize=12)
     save(fig, outdir / "zero_latent")
     pd.DataFrame(all_records).to_csv(outdir / "zero_latent.csv", index=False)
     (outdir / "zero_latent_exclusions.json").write_text(
@@ -478,7 +473,7 @@ def cmd(frames, selected, cache: Path, outdir: Path, equation_for_seed):
         shading="auto", rasterized=True,
     )
     cb1 = fig.colorbar(image, ax=axes[1], fraction=0.046, pad=0.02)
-    cb1.set_label("$\\langle s \\rangle$ (dimensionless)", fontsize=16)
+    cb1.set_label("$\\langle s \\rangle$", fontsize=18)
     grid = np.linspace(-24, -18, 200)
     for ax in axes:
         ax.plot(
