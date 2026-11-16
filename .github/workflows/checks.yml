@@ -31,3 +31,15 @@ jobs:
         run: uv run --frozen python experiments/conditioning/suite.py list
       - name: Build distribution
         run: uv build
+
+  spectral-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - name: Install locked spectral preparation environment
+        run: uv sync --frozen --extra inference
+      - name: Run spectral cache and stellar-mass benchmark tests
+        run: uv run --frozen --extra inference python -m unittest discover -s tests -p 'test_stellar_mass_mlp.py' -v

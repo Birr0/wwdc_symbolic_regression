@@ -1,5 +1,6 @@
 """Scientific contracts for the matched spectral/latent benchmark."""
 import json
+from importlib.util import find_spec
 from pathlib import Path
 import tempfile
 import unittest
@@ -8,7 +9,6 @@ from unittest.mock import patch
 import joblib
 import numpy as np
 import pandas as pd
-import torch
 
 from wwdc_repro.redshift import stellar_mass_mlp as mlp
 from wwdc_repro.shared.search_runs import search_run
@@ -20,9 +20,12 @@ class StellarMassMLPTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.home = Path(self.temp.name)
-        torch.set_num_threads(1)
 
+    @unittest.skipUnless(all(find_spec(name) is not None for name in
+                             ("torch", "datasets", "spender")),
+                         "Spectral preparation requires the inference extra")
     def test_prepare_cache_uses_local_loader_and_explicit_data_root(self):
+        import torch
         from datasets import Dataset, DatasetDict
         raw = self.home/'raw'
         wave = (10 ** torch.arange(3.578, 3.97, 0.0001)).numpy()
@@ -58,7 +61,10 @@ class StellarMassMLPTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'normalisation'):
             mlp.read_spectra(cache, frames, raw_flux=True)
 
+    @unittest.skipUnless(find_spec("torch") is not None,
+                         "Spectral tensor preparation requires the inference extra")
     def test_preparation_matches_ids_instead_of_assuming_dataset_order(self):
+        import torch
         class Dataset:
             dataset = {'object_id':[b'202',b'101',b'303']}
             _wave_obs = torch.arange(3921)
@@ -75,7 +81,10 @@ class StellarMassMLPTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'absent'):
             mlp.write_spectral_split(Dataset(),missing,self.home,'val')
 
+    @unittest.skipUnless(find_spec("torch") is not None,
+                         "Spectral tensor preparation requires the inference extra")
     def test_preparation_rejects_nonfinite_flux_and_missing_dataset(self):
+        import torch
         class Dataset:
             dataset = {'object_id':['101']}
             _wave_obs = torch.arange(3921)
