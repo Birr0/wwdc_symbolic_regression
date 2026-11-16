@@ -33,3 +33,32 @@ class NormFamilyTests(unittest.TestCase):
         for std in (0., -1., np.nan):
             with self.subTest(std=std), self.assertRaises(ValueError):
                 norm_family_coefficients(self.equation, 1., std)
+
+
+class StellarMassExportTests(unittest.TestCase):
+    def test_only_latex_is_copied_to_manuscript(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        from tools.export_manuscript import export_stellar_mass_tables
+        from wwdc_repro.redshift import stellar_mass_mlp as mlp
+
+        for grid in (True, False):
+            with self.subTest(grid=grid), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run, paper, analysis = root/'run', root/'paper/tables', root/'outputs/tables'
+                (run/'orig').mkdir(parents=True)
+                if grid:
+                    (run/'orig/trial_metrics.csv').write_text('fixture')
+                table = 'stellar_mass_mlp_grid.tex' if grid else 'stellar_mass_mlp.tex'
+                def render(inputs, destination):
+                    destination.mkdir(parents=True)
+                    for name in (table, 'stellar_mass_mlp_numbers.tex', 'scores.csv', 'provenance.json'):
+                        (destination/name).write_text(name)
+                with patch.object(mlp, 'verified_results', return_value={'results':[{'arm':'orig'}]}), \
+                     patch.object(mlp, 'export_grid', side_effect=render), \
+                     patch.object(mlp, 'export_results', side_effect=render):
+                    export_stellar_mass_tables([run], paper, analysis)
+                self.assertEqual({p.name for p in paper.iterdir()}, {table, 'stellar_mass_mlp_numbers.tex'})
+                self.assertTrue((analysis/'scores.csv').is_file())
+                self.assertTrue((analysis/'provenance.json').is_file())

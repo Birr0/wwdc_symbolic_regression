@@ -169,7 +169,7 @@ def norm_family_table(selected, work):
                  'tab:norm_family_values')
 
 
-def export(fresh, validation, project):
+def export(fresh, validation, project, mlp_run=None, mlp_runs=None):
     """Export saved figures and generated tables into an Overleaf project.
 
     Parameters
@@ -184,6 +184,12 @@ def export(fresh, validation, project):
     project : pathlib.Path
         Destination project. Creates figures/ and tables/ as needed and
         overwrites the exported assets at their established filenames.
+    mlp_run : pathlib.Path or None
+        Optional separately completed stellar-mass MLP benchmark. Otherwise
+        use fresh/work/stellar_mass_mlp when present.
+    mlp_runs : sequence of pathlib.Path or None
+        Completed benchmarks to combine into the full-grid table. Mutually
+        exclusive with mlp_run. Use all three spectral-mode runs for the paper.
 
     Returns
     -------
@@ -311,6 +317,17 @@ def export(fresh, validation, project):
     if norm_cmd_equation(training_norm) != norm_cmd_equation(selected_norm):
         raise ValueError("NORM CMD equation changed; regenerate that figure before exporting")
     rendered['norm_family_values.tex'] = norm_family_table(selected_norm, work)
+    # Optional for older runs; fresh equation runs include this benchmark. Verify
+    # the model/prediction receipt before exporting directly from its results.
+    if mlp_run is not None and mlp_runs is not None:
+        raise ValueError('Use mlp_run or mlp_runs, not both')
+    default_mlp = fresh / 'work/stellar_mass_mlp'
+    benchmarks = (list(mlp_runs) if mlp_runs is not None else
+                  [mlp_run] if mlp_run is not None else
+                  [default_mlp] if default_mlp.exists() else [])
+    for benchmark in benchmarks:
+        from wwdc_repro.redshift.stellar_mass_mlp import verified_results
+        verified_results(benchmark)
     for src in copies.values():
         if not src.is_file():
             raise FileNotFoundError(src)
@@ -322,7 +339,32 @@ def export(fresh, validation, project):
             shutil.copy2(src, dest)
     for name, content in rendered.items():
         (project / "tables" / name).write_text(content)
+    if benchmarks:
+        export_stellar_mass_tables(benchmarks, project / 'tables', fresh / 'tables/stellar_mass_mlp')
     print(f"Exported {len(copies)} files and {len(rendered)} generated tables/macros to {project}")
+
+
+def export_stellar_mass_tables(runs, destination, analysis_directory):
+    """Generate MLP products under reproduction outputs; copy only LaTeX to the paper.
+
+    CSV and provenance files remain in analysis_directory, alongside generated
+    LaTeX. destination receives only the table and numerical macro files.
+    """
+    from wwdc_repro.redshift.stellar_mass_mlp import export_grid, export_results, verified_results
+    reports = [verified_results(run) for run in runs]
+    has_grid = all((run/result['arm']/'trial_metrics.csv').is_file()
+                   for run, report in zip(runs, reports) for result in report['results'])
+    if has_grid:
+        export_grid(runs, analysis_directory)
+        table = 'stellar_mass_mlp_grid.tex'
+    elif len(runs) == 1:
+        export_results(runs[0], analysis_directory)
+        table = 'stellar_mass_mlp.tex'
+    else:
+        raise ValueError('Combining MLP runs requires trial_metrics.csv for every representation')
+    destination.mkdir(parents=True, exist_ok=True)
+    for name in (table, 'stellar_mass_mlp_numbers.tex'):
+        shutil.copy2(analysis_directory / name, destination / name)
 
 
 def main():
@@ -341,6 +383,10 @@ def main():
     parser.add_argument("--fresh", type=Path)
     parser.add_argument("--validation", type=Path)
     parser.add_argument("--project", type=Path, required=True)
+    mlp_options = parser.add_mutually_exclusive_group()
+    mlp_options.add_argument("--mlp-run", type=Path, help="Optional separately fitted stellar-mass benchmark directory")
+    mlp_options.add_argument("--mlp-runs", type=Path, nargs='+',
+                             help="Completed stellar-mass benchmarks to combine into the full-grid table")
     args = parser.parse_args()
     if args.run is not None:
         if args.fresh is not None or args.validation is not None:
@@ -349,7 +395,7 @@ def main():
         parser.error("provide --run or both --fresh and --validation")
     if not (args.project / "draft.tex").is_file():
         parser.error("project must contain draft.tex")
-    export(args.run if args.run is not None else args.fresh, args.validation, args.project)
+    export(args.run if args.run is not None else args.fresh, args.validation, args.project, args.mlp_run, args.mlp_runs)
 
 
 if __name__ == "__main__":
