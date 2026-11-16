@@ -287,13 +287,13 @@ def seed_frontiers(selected: pd.DataFrame, outdir: Path) -> None:
             _frontier_markers(ax, c.budget, c.display_r2, c.display_fallback, ARM_COLOUR[arm])
         _frontier_axes(ax, selected.budget.min(), selected.budget.max(),
                        selected.test_r2.max())
-        ax.set_xlabel("Maximum equation length", fontsize=18)
-        ax.tick_params(labelsize=16)
-        ax.set_title(f"seed {seed}", fontsize=17)
-    axes[0].set_ylabel("$R^2$", fontsize=18)
+        ax.set_xlabel("Maximum equation length", fontsize=21)
+        ax.tick_params(labelsize=19)
+        ax.set_title(f"seed {seed}", fontsize=20)
+    axes[0].set_ylabel("$R^2$", fontsize=21)
     handles, labels = axes[-1].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, -0.14),
-               ncol=3, fontsize=12.5, frameon=False)
+               ncol=3, fontsize=16, frameon=False)
     fig.tight_layout()
     stem = outdir / "frontier_lgm_tot_p50_by_seed"
     fig.savefig(stem.with_suffix(".png"), dpi=300, facecolor=SURFACE, bbox_inches="tight")
