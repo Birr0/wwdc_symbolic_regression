@@ -54,7 +54,6 @@ def plot_sequence(source: Path, out: Path) -> None:
         observed_wave = data["wave_rest"]
         observed = data["normalised_flux"]
         observed_flux = data["flux"]
-        spec_ids = data["specObjID"]
     n_examples = len(nref)
     # restore to flux scale
     restored = spectra * (nref[:, None] * factors[None, :])[:, :, None]
@@ -63,7 +62,8 @@ def plot_sequence(source: Path, out: Path) -> None:
     mask = (wave >= 3700) & (wave <= 7500) # wavelength for plotting
     out.mkdir(parents=True, exist_ok=True)
     plt.style.use(STYLE)
-    plt.rcParams.update({"font.size": 12, "axes.labelsize": 14})
+    plt.rcParams.update({"font.size": 18, "axes.labelsize": 20,
+                         "xtick.labelsize": 18, "ytick.labelsize": 18})
     fig, axes = plt.subplots(
         n_examples,
         2,
@@ -79,7 +79,7 @@ def plot_sequence(source: Path, out: Path) -> None:
         else float(factors.min() + 1),
     )
     colours = plt.cm.viridis(colour_norm(factors))
-    for i, spec_id in enumerate(spec_ids):
+    for i in range(n_examples):
         axes[i, 0].plot(
             observed_wave[i],
             observed[i],
@@ -104,12 +104,8 @@ def plot_sequence(source: Path, out: Path) -> None:
                 wave[mask], spectra[i, j, mask], color=colours[j], lw=0.9, label=label
             )
             axes[i, 1].plot(wave[mask], restored[i, j, mask], color=colours[j], lw=0.9)
-        axes[i, 1].legend(fontsize=10, loc="lower right", frameon=True)
-        axes[i, 0].set_title(f"Spectrum ID: {int(spec_id)}")
-        axes[i, 1].set_title(
-            rf"Decoder output $\times\,N$; $N_{{\rm ref}}={nref[i]:.2f}$"
-        )
-        axes[i, 0].set_ylabel("Decoded normalised flux")
+        axes[i, 1].legend(fontsize=16, loc="lower right", frameon=True)
+        axes[i, 0].set_ylabel("Normalised flux")
         axes[i, 1].set_ylabel(
             "Flux density\n" + r"[$10^{-17}\,\mathrm{erg\,s^{-1}\,cm^{-2}\,\AA^{-1}}$]"
         )
@@ -125,7 +121,7 @@ def plot_sequence(source: Path, out: Path) -> None:
         fraction=0.025,
         shrink=0.6,
         ticks=np.unique(factors),
-        label=r"Relative normalisation $N/N_{\rm ref}$",
+        label=r"$N/N_{\rm ref}$",
     )
     fig.savefig(out / "norm_conditional_sequence.pdf", dpi=350)
     fig.savefig(out / "norm_conditional_sequence.png", dpi=300)
