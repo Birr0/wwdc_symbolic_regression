@@ -35,7 +35,7 @@ def input_hashes(paths):
 
 
 @contextmanager
-def search_run(directory, configuration, outputs, *, restart_incomplete=False):
+def search_run(directory, configuration, outputs, *, restart_incomplete=False, completion_metadata=None):
     """Manage completion checks and restarts for one symbolic search.
  
     Parameters
@@ -49,6 +49,10 @@ def search_run(directory, configuration, outputs, *, restart_incomplete=False):
     restart_incomplete : bool, optional
         Preserve an incomplete or unverified attempt in incomplete_attempts/
         and start again. Default is False.
+    completion_metadata : dict or None, optional
+        Additional metadata to save in the completion record. The caller may
+        populate this dictionary during execution; it is serialised only on
+        successful completion and does not participate in configuration matching.
     
     Yields
     ------
@@ -109,7 +113,10 @@ def search_run(directory, configuration, outputs, *, restart_incomplete=False):
         yield True
         hashes = {name: sha256(directory / name) for name in outputs}
         temporary = directory / '.search_complete.tmp'
-        temporary.write_text(json.dumps(dict(configuration=configuration, outputs=hashes), indent=2) + '\n') # record completion
+        record = dict(configuration=configuration, outputs=hashes)
+        if completion_metadata is not None:
+            record['metadata'] = completion_metadata
+        temporary.write_text(json.dumps(record, indent=2) + '\n') # record completion
         temporary.replace(marker)
 
 

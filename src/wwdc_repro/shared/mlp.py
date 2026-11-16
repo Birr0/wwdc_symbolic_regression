@@ -13,7 +13,7 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from threadpoolctl import threadpool_limits
 
 from wwdc_repro.shared.utils import sha256
@@ -28,13 +28,20 @@ MLP_PARAMETERS = dict(
 )
 
 
-def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40):
+def scaled_asinh(values, *, scale):
+    """Apply the saved training flux scale before the inverse hyperbolic sine."""
+    return np.arcsinh(np.asarray(values) / scale)
+
+
+def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40,
+            model_parameters=None, asinh=False, threads=2, train_indices=None):
     """Fit a small MLP and retain the minimum-validation-MSE checkpoint.
 
     Parameters
     ----------
     x_train, x_val : numpy.ndarray
-        Training and existing validation feature matrices. No new split is made.
+        Full training and existing validation feature matrices. Preprocessing
+        is fitted on all supplied training rows, before optional subsampling.
     y_train, y_val : numpy.ndarray
         Corresponding one-dimensional target arrays.
     seed : int
@@ -43,6 +50,20 @@ def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40
         Maximum number of passes over the training sample.
     patience : int, optional
         Stop after this many epochs without a lower validation MSE.
+
+    model_parameters : dict, optional
+        Overrides for MLP_PARAMETERS (hidden sizes, activation, solver, alpha,
+        batch size and initial learning rate). Existing callers retain defaults.
+    asinh : bool, optional
+        For spectra, apply arcsinh(x / q) before standardisation, with q the
+        median absolute training flux across all rows and pixels. The fitted
+        pipeline includes this transformation for prediction on raw inputs.
+    train_indices : array-like of int or None, optional
+        Distinct row indices used for model fitting after preprocessing has
+        been fitted on the full training split. None fits the model on all
+        supplied training rows, preserving the behaviour of existing callers.
+    threads : int, optional
+        Numerical thread limit during fitting; default is 2.
 
     Returns
     -------
@@ -55,14 +76,40 @@ def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40
     """
     if max_epochs < 1 or patience < 1:
         raise ValueError("max_epochs and patience must be positive")
-    input_scaler = StandardScaler().fit(x_train)
+    parameters = dict(MLP_PARAMETERS)
+    if model_parameters:
+        unknown = set(model_parameters) - parameters.keys()
+        if unknown:
+            raise ValueError(f"Unknown MLP parameters: {sorted(unknown)}")
+        parameters.update(model_parameters)
+    if train_indices is None:
+        indices = np.arange(len(x_train))
+    else:
+        indices = np.asarray(train_indices)
+        if (indices.ndim != 1 or not np.issubdtype(indices.dtype, np.integer)
+                or len(indices) == 0 or len(np.unique(indices)) != len(indices)
+                or np.any(indices < 0) or np.any(indices >= len(x_train))):
+            raise ValueError("Invalid training row indices")
+    if len(x_train) != len(y_train):
+        raise ValueError("Training features and targets must have matching rows")
+    steps = []
+    if asinh:
+        q = float(np.median(np.abs(x_train)))
+        if not np.isfinite(q) or q <= 0:
+            raise ValueError("Invalid training asinh scale")
+        steps.append(("asinh", FunctionTransformer(scaled_asinh, kw_args={"scale": q})))
+    steps.append(("scaler", StandardScaler()))
+    preprocessing = Pipeline(steps)
+    preprocessing.fit(x_train)
+    xt = preprocessing.transform(np.asarray(x_train)[indices])
+    xv = preprocessing.transform(x_val)
+    if not np.isfinite(y_train).all() or np.std(y_train) <= 0:
+        raise ValueError("Invalid training target scale")
     target_scaler = StandardScaler().fit(np.asarray(y_train).reshape(-1, 1))
-    xt = input_scaler.transform(x_train)
-    xv = input_scaler.transform(x_val)
-    yt = target_scaler.transform(np.asarray(y_train).reshape(-1, 1)).ravel()
+    yt = target_scaler.transform(np.asarray(y_train)[indices].reshape(-1, 1)).ravel()
     yv = target_scaler.transform(np.asarray(y_val).reshape(-1, 1)).ravel()
     model = MLPRegressor(
-        **MLP_PARAMETERS,
+        **parameters,
         early_stopping=False,
         shuffle=True,
         random_state=np.random.RandomState(seed),
@@ -71,10 +118,8 @@ def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40
     )
     best_loss, best_epoch, best_model = np.inf, 0, None
     history = []
-    with threadpool_limits(limits=2):
+    with threadpool_limits(limits=threads):
         for epoch in range(1, max_epochs + 1):
-            # partial_fit preserves Adam's optimizer state between epochs.
-            # train for one epoch
             model.partial_fit(xt, yt)
             val_loss = mean_squared_error(yv, model.predict(xv))
             train_loss = mean_squared_error(yt, model.predict(xt))
@@ -93,17 +138,19 @@ def fit_mlp(x_train, y_train, x_val, y_val, *, seed, max_epochs=500, patience=40
     if best_model is None:
         raise RuntimeError("No finite validation checkpoint")
     checkpoint = dict(
-        model=Pipeline([("scaler", input_scaler), ("mlp", best_model)]),
+        model=Pipeline([*preprocessing.steps, ("mlp", best_model)]),
         target_scaler=target_scaler,
         best_epoch=best_epoch,
         epochs_run=epoch,
+        n_preprocessing_train=len(x_train),
+        n_fit_train=len(indices),
     )
     return checkpoint, pd.DataFrame(history)
 
 
-def predict_mlp(checkpoint, x):
+def predict_mlp(checkpoint, x, *, threads=2):
     """Predict in the original target units using a frozen checkpoint."""
-    with threadpool_limits(limits=2):
+    with threadpool_limits(limits=threads):
         standardized = checkpoint["model"].predict(x)
     return (
         checkpoint["target_scaler"]
