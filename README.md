@@ -69,6 +69,8 @@ absolute or relative to the configuration file.
 | `joint_embeddings` | Joint redshift/NORM-conditioned embeddings. |
 | `cmd_cache` | Saved `vagc_join.parquet` catalogue for CMD plots. |
 | `norm_generation` | Contains `generated_spectra.npz` and `observed_spectra.npz`. |
+| `stellar_mlp_spectra` | Optional matched spectral cache for the total-mass MLP; see below. |
+| `stellar_mlp_data_root` | Optional root containing `sdss/sdss_II_catalog`; enables automatic spectral-cache preparation. |
 
 For the downloaded bundle, use `data/paper/data` as `data_root`,
 `data/paper/conditioning/plot_cmd_latent_results/vagc_join.parquet` as `cmd_cache`,
@@ -108,6 +110,131 @@ pass `--config FILE` and `--outdir DIR` consistently to all three commands.
 The manuscript selects equations by validation performance and reports their test
 scores. Use `--selection validation` consistently for all stages. Training-based
 selection remains available with `--selection train` (the CLI default).
+
+### Matched total stellar-mass MLP benchmark
+
+The runnable entry point is
+[`src/wwdc_repro/redshift/stellar_mass_mlp.py`](src/wwdc_repro/redshift/stellar_mass_mlp.py),
+with `prepare`, `fit` and `export` commands. It reuses `shared/mlp.py` for
+scikit-learn training, preprocessing and prediction. It fits the original ten latents on exactly
+the same seed-42 draw of 10,000 spectra as SR, preserving the validation/test
+splits and the `lgm_tot_p50` target. No redshift or normalisation factor is
+appended. It compares hidden widths `(128, 64)` and `(1024, 512)` at learning
+rates `1e-3` and `1e-4`, using Adam with L2 regularisation (`alpha=1e-4`), training-only scaling and validation-loss
+early stopping. The configuration is selected by validation loss; only the
+selected model is used for the headline comparison. After validation-based
+selection, all trial checkpoints are evaluated for the full-grid report. This is one seed, not a three-seed mean.
+
+Run this part of the pipeline without repeating symbolic searches:
+
+```bash
+python reproduce.py mlp --config reproduction.json --outdir outputs/paper \
+  --selection validation --threads 4
+```
+
+This fits and exports the original-latent benchmark. It is also included in
+`equations`; `tables` exports it without retraining. Fitting uses scikit-learn on CPU; only raw spectral-cache preparation needs
+the `inference` extra for the SDSS loader. Selected models and preprocessing
+are saved together as `model.joblib`. These are new fits, not reproductions
+of the historical PyTorch/AdamW scores. Completed runs verify their
+saved checkpoints, predictions and receipts before reuse. Different settings
+or inputs require a new output directory; `--restart-incomplete` preserves and
+restarts an interrupted attempt.
+
+To prepare spectra, fit both inputs and export in one pipeline command:
+
+```bash
+python reproduce.py mlp --config reproduction.json --outdir outputs/mlp-from-data \
+  --spectra-data-root /path/to/raw-data \
+  --selection validation --threads 4
+```
+
+The raw-data root must contain the existing `sdss/sdss_II_catalog` dataset with
+its archived train/validation/test splits. It is not the small generated-spectra
+bundle used for Figure 5, and the pipeline will not download it or recreate its
+splits. The loader is included in `src/wwdc_repro/shared/sdss.py`, copied from
+`wwdc_spectra` with its spectral preprocessing unchanged. No external source
+checkout is needed; install the `inference` dependency extra. The
+pipeline generates `work/stellar_mass_spectra/`, matching by spectrum ID rather
+than assuming dataset row order. This cache contains flux arrays, catalogue
+rows, the observed wavelength grid, input
+hashes and a completion receipt. It uses observed spectra,
+not a decoder or model checkpoint. Masks and nonfinite-value handling follow
+the shared SDSS implementation.
+
+Set `stellar_mlp_data_root` in the config instead of
+the CLI overrides to include preparation automatically in `equations` as well.
+Use the same configuration/overrides for subsequent reporting stages.
+An explicit `stellar_mlp_spectra`/`--spectra-dir` cache takes precedence over
+automatic preparation. To build only the cache:
+
+```bash
+python src/wwdc_repro/redshift/stellar_mass_mlp.py prepare \
+  --config reproduction.json \
+  --data-root /path/to/raw-data --outdir outputs/spectral-cache
+```
+
+To use an already prepared full-spectrum cache, add
+`--spectra-dir /path/to/spectral-cache` to `mlp` (or `equations`), or set
+`stellar_mlp_spectra` in the config. Use that same option/config for subsequent
+`plots` and `tables` commands. This cache is a separate input, not the
+small generated-spectra bundle used by Figure 5. It contains:
+
+- `{train,val,test}_spectra.npy`: finite normalised observed-frame spectra,
+  shape `(n, 3921)`, before asinh or per-pixel scaling.
+- `{train,val,test}_rows.csv`: ordered `specObjID` and `lgm_tot_p50` columns.
+  Training must contain the full cleaned training split for preprocessing;
+  model fitting uses the seed-42 SR draw of 10,000 rows. Validation/test must
+  contain the full eligible splits. Mismatched IDs, ordering or targets stop the run.
+
+The spectral arm uses the same four-trial grid, with an asinh transform whose
+scale is the training median absolute pixel flux. Neither arm receives
+photometric features, masks, inverse-variance inputs, or explicit redshift.
+Both keep all eligible test spectra, including large residuals. The cache
+must have been prepared with the documented Spender normalisation. Caches
+created with `prepare` have their completion hashes verified before fitting.
+Legacy caches can still be supplied explicitly, but their preprocessing
+provenance cannot be established from alignment checks alone.
+
+For direct use of the single file (install the `inference` extra first):
+
+```bash
+python src/wwdc_repro/redshift/stellar_mass_mlp.py fit \
+  --config reproduction.json --outdir outputs/mlp-only \
+  --spectra-dir /path/to/spectral-cache --threads 4
+python src/wwdc_repro/redshift/stellar_mass_mlp.py export \
+  --run outputs/mlp-only --outdir outputs/mlp-tables
+```
+
+Pipeline fits are saved under `work/stellar_mass_mlp/`: model checkpoints,
+trial histories, validation-selection scores, ordered sample IDs and selected
+predictions for every split. Exports go to `tables/stellar_mass_mlp/` and
+include CSV, a LaTeX table, numerical macros and provenance. The macros are
+`\StellarMLPOriginalRtwo` and, when spectra are fitted, `\StellarMLPSpectrumRtwo`.
+The manuscript asset exporter copies only the table and numerical macro `.tex`
+files into the paper when the fresh run contains the benchmark; it does not insert prose or `\input` commands.
+For an independently run benchmark, pass its directory explicitly to the
+existing manuscript export command using
+`--mlp-run outputs/stellar-mass-mlp-matched/work/stellar_mass_mlp`.
+
+For the full grid currently included in the paper, use the same manuscript
+exporter with all three spectral-mode runs. It generates the full metrics CSV
+and LaTeX under the reproduction run's `tables/stellar_mass_mlp/`, then copies
+only `stellar_mass_mlp_grid.tex` and `stellar_mass_mlp_numbers.tex` into the
+manuscript's `tables/` folder. The manuscript already inputs these files:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m tools.export_manuscript \
+  --run outputs/paper \
+  --mlp-runs outputs/stellar-mass-mlp-fulltrain-normalised-asinh/work/stellar_mass_mlp \
+             outputs/stellar-mass-mlp-fulltrain-normalised/work/stellar_mass_mlp \
+             outputs/stellar-mass-mlp-fulltrain-raw/work/stellar_mass_mlp \
+  --project ../pre-submission/WWDC_Symbolic_Regression
+```
+
+Here `--run` should be your completed main paper run. The exporter verifies the
+MLP runs, combines all input groups, deduplicates the latent control and updates
+the test-only table and validation-selected numerical macros without training.
 
 ## 5. Check the results
 
@@ -196,3 +323,42 @@ The downloader's smaller `saved` profile supports this route.
 </details>
 
 Code is licensed under [MIT](LICENSE).
+
+The matched stellar-mass benchmark also supports `--spectrum-mode normalised`
+(normalised flux without asinh) and `--spectrum-mode raw` (observed flux,
+without per-spectrum division or asinh). The default is `normalised-asinh`.
+Every mode uses training-only per-pixel standardisation and the same network
+search. Supply a new output directory for each comparison. Raw mode requires
+a raw-flux cache, created automatically with `--spectra-data-root` or explicitly
+with `stellar_mass_mlp.py prepare --raw-flux`. A cache completion record prevents
+mixing raw and normalised inputs. Existing normalised caches can be shared by
+both normalised modes. The `mlp` pipeline forwards these options and exports
+separately labelled results for each mode.
+
+Every new stellar-mass run retains each trial checkpoint and a
+`trial_metrics.csv` with training, validation and test scores at the best
+validation epoch. To combine all representations into one CSV and LaTeX table:
+
+```bash
+python src/wwdc_repro/redshift/stellar_mass_mlp.py export-grid \
+  --runs RUN_A/work/stellar_mass_mlp RUN_B/work/stellar_mass_mlp \
+  --outdir outputs/mlp-grid-tables
+```
+
+The export deduplicates identical latent controls and records the configuration
+selected by validation in the CSV and numerical macros. Test scores never influence checkpoint or model selection.
+
+The stellar-mass benchmark now fits feature scalers on the **full cleaned
+training split**, matching SR, and only then selects the seeded 10,000 rows
+for neural-network optimisation. The asinh scale and target scaler also use
+that full training split. Validation and test rows never fit preprocessing.
+Training scores still refer to the selected 10,000 fitting rows. Existing
+shared-MLP callers retain their behaviour unless they supply `train_indices`.
+
+Spectral caches created by `prepare` now include all cleaned training spectra.
+Old caches containing only the 10,000 selected training spectra must be rebuilt
+in a new directory. Historical grid runs used subset-fitted scaling. The corrected runs are under
+`outputs/stellar-mass-mlp-fulltrain-{normalised-asinh,normalised,raw}/`; their
+combined CSV and LaTeX exports are under
+`outputs/stellar-mass-mlp-fulltrain-comparison/tables/stellar_mass_mlp/`.
+The manuscript table and numerical macros have been updated from these runs.
