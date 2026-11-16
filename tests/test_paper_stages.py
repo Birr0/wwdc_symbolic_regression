@@ -50,6 +50,38 @@ class PaperStageTests(unittest.TestCase):
         checks = check_reference(samples, pd.DataFrame(), pd.DataFrame(), fresh_fronts=True)
         self.assertFalse(all(row['passed'] for row in checks))
 
+    def test_stellar_mlp_can_run_without_symbolic_searches_and_exports(self):
+        self.paths['stellar_mlp_spectra'] = self.home / 'spectral-cache'
+        steps = stages.build_steps('mlp', self.paths, self.out, config=self.config)
+        self.assertEqual(len(steps), 2)
+        self.assertIn('fit', steps[0]['command'])
+        self.assertIn('--spectra-dir', steps[0]['command'])
+        self.assertIn(str(self.config), steps[0]['command'])
+        self.assertIn('export', steps[1]['command'])
+        self.assertTrue(steps[0]['managed'])
+        self.assertFalse(any(s['search'] for s in steps))
+        with patch.object(stages, 'source_files', return_value=[]), patch.object(stages, 'run_steps') as run:
+            stages.main(['mlp', '--check', '--config', str(self.config), '--outdir', str(self.out)])
+            run.assert_not_called()
+
+    def test_stellar_mlp_prepares_cache_before_fitting_when_raw_data_supplied(self):
+        self.paths['stellar_mlp_data_root'] = self.home/'raw-data'
+        steps = stages.build_steps('mlp',self.paths,self.out,config=self.config)
+        self.assertEqual([s['name'] for s in steps],
+                         ['prepare-stellar-spectra','fit-stellar-mlp','mlp-stellar-mlp'])
+        self.assertIn(str(self.home/'raw-data'),steps[0]['command'])
+        cache = str(self.out/'work/stellar_mass_spectra')
+        self.assertIn(cache,steps[0]['command'])
+        self.assertIn(cache,steps[1]['command'])
+        self.assertTrue(steps[0]['managed'])
+
+    def test_raw_flux_mode_reaches_preparation_and_fitting(self):
+        self.paths['stellar_mlp_data_root'] = self.home/'raw-data'
+        steps = stages.build_steps('mlp',self.paths,self.out,config=self.config,spectrum_mode='raw')
+        self.assertIn('--raw-flux',steps[0]['command'])
+        self.assertIn('--spectrum-mode',steps[1]['command'])
+        self.assertIn('raw',steps[1]['command'])
+
     def test_reporting_only_reads_current_run_and_never_fits(self):
         for stage in ('plots', 'tables'):
             steps = stages.build_steps(stage, self.paths, self.out)

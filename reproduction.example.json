@@ -4,5 +4,7 @@
   "norm_embeddings": "/path/to/data/sdss_II/spender_I_normalisation_flow/embeddings/norm_20261012183217_0",
   "joint_embeddings": "/path/to/data/sdss_II/spender_I_z_normalisation_flow/embeddings/znorm_20261013104946_0",
   "cmd_cache": "/path/to/vagc_join.parquet",
-  "norm_generation": "/path/to/saved-norm-sequence"
+  "norm_generation": "/path/to/saved-norm-sequence",
+  "stellar_mlp_spectra": null,
+  "stellar_mlp_data_root": null
 }

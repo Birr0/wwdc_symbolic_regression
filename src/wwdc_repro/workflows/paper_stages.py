@@ -24,7 +24,8 @@ def load_config(path):
     """Resolve explicit inputs; default embedding locations follow the released data layout."""
     raw = json.loads(path.read_text())
     allowed = {'data_root', 'embeddings', 'norm_embeddings', 'joint_embeddings',
-               'galspec', 'specgals_home', 'cmd_cache', 'norm_generation'}
+               'galspec', 'specgals_home', 'cmd_cache', 'norm_generation', 'stellar_mlp_spectra',
+               'stellar_mlp_data_root'}
     if not isinstance(raw, dict) or 'data_root' not in raw or set(raw) - allowed:
         raise ValueError(f'Configuration needs data_root; allowed keys: {sorted(allowed)}')
     paths = {}
@@ -50,14 +51,21 @@ def load_config(path):
 def source_files(paths, stage):
     """Check the stage's external prerequisites before running commands."""
     files = [paths['galspec'], *(paths['specgals_home'] / f'SDSSspecgalsDR8_{i}.fit.gz' for i in (1, 2))]
-    for name in ('embeddings', 'norm_embeddings', 'joint_embeddings'):
+    for name in (('embeddings',) if stage == 'mlp' else ('embeddings', 'norm_embeddings', 'joint_embeddings')):
         for split in ('train', 'val', 'test'):
             shards = sorted((paths[name] / split).glob('*.parquet'))
             if not shards:
                 raise FileNotFoundError(f'No embeddings: {paths[name] / split}')
             files.extend(shards)
-    norm = paths['norm_embeddings']
-    files.append(norm.parent.parent / 'ckpts' / f'{norm.name}.yaml')
+    if stage != 'mlp':
+        norm = paths['norm_embeddings']
+        files.append(norm.parent.parent / 'ckpts' / f'{norm.name}.yaml')
+    if 'stellar_mlp_spectra' in paths:
+        files.extend(paths['stellar_mlp_spectra'] / f'{split}_{suffix}'
+                     for split in ('train', 'val', 'test') for suffix in ('spectra.npy', 'rows.csv'))
+    elif 'stellar_mlp_data_root' in paths:
+        from wwdc_repro.redshift.stellar_mass_mlp import spectral_dataset_sources
+        files.extend(spectral_dataset_sources(paths.get('stellar_mlp_data_root', paths['data_root'])))
     if stage == 'plots':
         if not {'cmd_cache', 'norm_generation'} <= paths.keys():
             raise ValueError('plots requires cmd_cache and norm_generation to produce all manuscript figures')
@@ -69,7 +77,7 @@ def source_files(paths, stage):
     return files
 
 
-def build_steps(stage, paths, out, *, selection='train', threads=8, restart=False):
+def build_steps(stage, paths, out, *, selection='train', threads=8, restart=False, config=None, spectrum_mode="normalised-asinh"):
     """Return explicit module commands and expected products in dependency order."""
     work = out / 'work/conditioning'
     python = ['uv', 'run', '--frozen', 'python', '-m']
@@ -81,10 +89,42 @@ def build_steps(stage, paths, out, *, selection='train', threads=8, restart=Fals
     fit_args = ['--threads', str(threads)] + (['--restart-incomplete'] if restart else [])
     steps = []
 
-    def add(name, module, args=(), products=(), owned=(), search=False, pinned=False):
-        command = suite + [module, *args] if pinned else python + [module, *args]
+    def add(name, module, args=(), products=(), owned=(), search=False, pinned=False, torch=False, managed=False):
+        interpreter = ['uv', 'run', '--frozen', '--extra', 'inference', 'python', '-m'] if torch else python
+        command = suite + [module, *args] if pinned else interpreter + [module, *args]
         steps.append(dict(name=name, command=command, cwd=str(ROOT if pinned else work),
-                          products=list(products), owned=list(owned), search=search))
+                          products=list(products), owned=list(owned), search=search, managed=managed))
+
+    mlp = out / 'work/stellar_mass_mlp'
+    if stage in ('equations', 'mlp'):
+        spectra = paths.get('stellar_mlp_spectra')
+        if spectra is None and 'stellar_mlp_data_root' in paths:
+            spectra = out / 'work/stellar_mass_spectra'
+            prepare_args = ['prepare', '--config', str(config or ROOT / 'reproduction.json'),
+                            '--data-root', str(paths.get('stellar_mlp_data_root', paths['data_root'])),
+                            '--outdir', str(spectra), '--threads', str(threads)]
+            if spectrum_mode == 'raw':
+                prepare_args.append('--raw-flux')
+            if restart:
+                prepare_args.append('--restart-incomplete')
+            add('prepare-stellar-spectra', 'wwdc_repro.redshift.stellar_mass_mlp', prepare_args,
+                [str(spectra/'search_complete.json')], torch=True, managed=True)
+        mlp_args = ['fit', '--config', str(config or ROOT / 'reproduction.json'),
+                    '--outdir', str(mlp), '--threads', str(threads), '--spectrum-mode', spectrum_mode]
+        if spectra is not None:
+            mlp_args.extend(['--spectra-dir', str(spectra)])
+        if restart:
+            mlp_args.append('--restart-incomplete')
+        add('fit-stellar-mlp', 'wwdc_repro.redshift.stellar_mass_mlp', mlp_args,
+            [str(mlp / 'results.json'), str(mlp / 'search_complete.json')], managed=True)
+    if stage == 'mlp':
+        add(f'{stage}-stellar-mlp', 'wwdc_repro.redshift.stellar_mass_mlp',
+            ['export', '--run', str(mlp), '--outdir', str(out / 'tables/stellar_mass_mlp')],
+            [str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp.*'),
+             str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp_numbers.tex'),
+             str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp_provenance.json')])
+    if stage == 'mlp':
+        return steps
 
     if stage == 'equations':
         for kind, arms, embeddings, prefix in (
@@ -151,6 +191,11 @@ def build_steps(stage, paths, out, *, selection='train', threads=8, restart=Fals
         else:
             add('tables-conditioning', 'wwdc_repro.workflows.paper_tables',
                 ['--outdir', str(out / 'tables/conditioning')], [str(out / 'tables/conditioning/*.csv'), str(out / 'tables/conditioning/*.tex')])
+            add('tables-stellar-mlp', 'wwdc_repro.redshift.stellar_mass_mlp',
+                ['export', '--run', str(mlp), '--outdir', str(out / 'tables/stellar_mass_mlp')],
+                [str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp.*'),
+                 str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp_numbers.tex'),
+                 str(out / 'tables/stellar_mass_mlp/stellar_mass_mlp_provenance.json')])
     return steps
 
 
@@ -192,7 +237,7 @@ def run_steps(steps, out, configuration, env, *, restart=False):
         print(step['name'], flush=True)
         state = out / '.steps' / step['name']
         # Search modules manage their own per-seed restart/completion records.
-        if step['search']:
+        if step['search'] or step.get('managed', False):
             execute(step)
             all_products.update(products(step, work))
             continue
@@ -218,22 +263,30 @@ def run_steps(steps, out, configuration, env, *, restart=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('stage', choices=('equations', 'plots', 'tables'))
+    parser.add_argument('stage', choices=('equations', 'plots', 'tables', 'mlp'))
     parser.add_argument('--config', type=Path, default=Path('reproduction.json'))
     parser.add_argument('--outdir', type=Path, default=Path('outputs/paper'))
     parser.add_argument('--selection', choices=('train', 'validation'), default='train')
     parser.add_argument('--threads', type=positive_int, default=8)
     parser.add_argument('--restart-incomplete', action='store_true')
     parser.add_argument('--check', action='store_true', help='Validate inputs and print commands without executing')
+    parser.add_argument('--spectrum-mode', choices=('normalised-asinh','normalised','raw'), default='normalised-asinh')
+    parser.add_argument('--spectra-dir', type=Path, help='Override stellar_mlp_spectra; use consistently across stages')
+    parser.add_argument('--spectra-data-root', type=Path, help='Root containing the existing SDSS split dataset')
     args = parser.parse_args(argv)
     paths, out = load_config(args.config.resolve()), args.outdir.resolve()
+    if args.spectra_dir is not None:
+        paths['stellar_mlp_spectra'] = args.spectra_dir.resolve()
+    if args.spectra_data_root is not None:
+        paths['stellar_mlp_data_root'] = args.spectra_data_root.resolve()
     for name, source in paths.items():
         if out == source or source in out.parents or out in source.parents:
             raise ValueError(f'Output directory must be separate from {name}: {source}')
     sources = source_files(paths, args.stage)
     configuration = dict(stage=args.stage, selection=args.selection, threads=args.threads,
+                         spectrum_mode=args.spectrum_mode,
                          inputs=input_hashes(sources))
-    if args.stage != 'equations':
+    if args.stage not in ('equations', 'mlp'):
         completed = out / 'equations.json'
         if not completed.is_file():
             raise FileNotFoundError(f'Run equations first: {completed}')
@@ -245,7 +298,8 @@ def main(argv=None):
                 raise ValueError(f'Inputs differ from equation run: {name}')
         verify_products(record['products'])
         configuration['equations_sha256'] = sha256(completed)
-    steps = build_steps(args.stage, paths, out, selection=args.selection, threads=args.threads, restart=args.restart_incomplete)
+    steps = build_steps(args.stage, paths, out, selection=args.selection, threads=args.threads,
+                        restart=args.restart_incomplete, config=args.config.resolve(), spectrum_mode=args.spectrum_mode)
     if args.check:
         for step in steps:
             print(f"{step['name']}: {shlex.join(step['command'])}")

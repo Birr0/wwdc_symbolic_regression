@@ -377,7 +377,7 @@ def run_steps(steps, outdir, paths, config):
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] in {"equations", "plots", "tables"}:
+    if len(sys.argv) > 1 and sys.argv[1] in {"equations", "plots", "tables", "mlp"}:
         from wwdc_repro.workflows.paper_stages import main as stage_main
         stage_main(sys.argv[1:])
         return
