@@ -292,8 +292,9 @@ def seed_frontiers(selected: pd.DataFrame, outdir: Path) -> None:
         ax.set_title(f"seed {seed}", fontsize=20)
     axes[0].set_ylabel("$R^2$", fontsize=21)
     handles, labels = axes[-1].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, -0.14),
-               ncol=3, fontsize=16, frameon=False)
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, -0.10),
+               ncol=3, fontsize=19, labelspacing=0.7, columnspacing=1.8,
+               frameon=False)
     fig.tight_layout()
     stem = outdir / "frontier_lgm_tot_p50_by_seed"
     fig.savefig(stem.with_suffix(".png"), dpi=300, facecolor=SURFACE, bbox_inches="tight")
